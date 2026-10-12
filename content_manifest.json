@@ -1,0 +1,130 @@
+{
+  "brand": "VerseNest Originals",
+  "songs": [
+    {
+      "title": "The Last Train Home",
+      "slug": "the-last-train-home",
+      "mood": "Hope",
+      "genre": "Indie Pop",
+      "read": "3 min",
+      "subtitle": "A song about finding the courage to begin again.",
+      "excerpt": "When every platform looks like goodbye, one journey can still feel like a beginning."
+    },
+    {
+      "title": "Paper Planets",
+      "slug": "paper-planets",
+      "mood": "Love",
+      "genre": "Dream Pop",
+      "read": "3 min",
+      "subtitle": "A gentle love song for two people who dream together.",
+      "excerpt": "Two people build a whole universe out of small, everyday moments."
+    },
+    {
+      "title": "One Light On",
+      "slug": "one-light-on",
+      "mood": "Heartbreak",
+      "genre": "Acoustic Folk",
+      "read": "3 min",
+      "subtitle": "Missing someone while slowly making peace with change.",
+      "excerpt": "A lamp in an empty house becomes a quiet promise to yourself."
+    },
+    {
+      "title": "Blueprints for Tomorrow",
+      "slug": "blueprints-for-tomorrow",
+      "mood": "Motivation",
+      "genre": "Alt Pop",
+      "read": "3 min",
+      "subtitle": "An uplifting anthem for people starting small.",
+      "excerpt": "Big dreams can begin as pencil marks on a crowded desk."
+    },
+    {
+      "title": "Small Town Satellites",
+      "slug": "small-town-satellites",
+      "mood": "Nostalgia",
+      "genre": "Indie Rock",
+      "read": "3 min",
+      "subtitle": "Remembering friends who moved to different places.",
+      "excerpt": "Old friends live far apart but keep sending signals home."
+    },
+    {
+      "title": "After the Rain",
+      "slug": "after-the-rain",
+      "mood": "Hope",
+      "genre": "Soft Pop",
+      "read": "3 min",
+      "subtitle": "Finding little signs of happiness after a difficult season.",
+      "excerpt": "A puddle can hold a whole sky when the storm moves on."
+    },
+    {
+      "title": "Quiet Thunder",
+      "slug": "quiet-thunder",
+      "mood": "Motivation",
+      "genre": "Electro Pop",
+      "read": "3 min",
+      "subtitle": "A celebration of quiet confidence.",
+      "excerpt": "You do not need to be loud to change your life."
+    },
+    {
+      "title": "Borrowed Summer",
+      "slug": "borrowed-summer",
+      "mood": "Heartbreak",
+      "genre": "Bedroom Pop",
+      "read": "3 min",
+      "subtitle": "A bittersweet song about a beautiful short relationship.",
+      "excerpt": "Some seasons are brief, but they still change the colors we remember."
+    },
+    {
+      "title": "Letters to the Sea",
+      "slug": "letters-to-the-sea",
+      "mood": "Nostalgia",
+      "genre": "Piano Ballad",
+      "read": "3 min",
+      "subtitle": "A reflection on family, change, and places we return to.",
+      "excerpt": "The ocean keeps no letters, but writing them can still help."
+    },
+    {
+      "title": "Hands Full of Sky",
+      "slug": "hands-full-of-sky",
+      "mood": "Love",
+      "genre": "Folk Pop",
+      "read": "3 min",
+      "subtitle": "A lighthearted song about making space for joy.",
+      "excerpt": "Love grows when two people notice the same small wonder."
+    },
+    {
+      "title": "Midnight Grocery Store",
+      "slug": "midnight-grocery-store",
+      "mood": "Hope",
+      "genre": "Lo-fi Pop",
+      "read": "3 min",
+      "subtitle": "A small encounter on a difficult night.",
+      "excerpt": "Sometimes a kind stranger can change the direction of an evening."
+    },
+    {
+      "title": "Somewhere in Between",
+      "slug": "somewhere-in-between",
+      "mood": "Motivation",
+      "genre": "Indie Folk",
+      "read": "3 min",
+      "subtitle": "Feeling uncertain while growing into a new chapter.",
+      "excerpt": "You can be unfinished and still be moving forward."
+    }
+  ],
+  "guides": [
+    {
+      "slug": "how-to-write-song-lyrics",
+      "title": "How to Write Song Lyrics: A Simple Beginner Guide",
+      "excerpt": "Turn one real memory into verses, a chorus, and a complete first draft."
+    },
+    {
+      "slug": "verse-chorus-bridge-explained",
+      "title": "Verse, Chorus, and Bridge: Song Structure Explained",
+      "excerpt": "Understand the main parts of a song with a simple example."
+    },
+    {
+      "slug": "songwriting-prompts-for-beginners",
+      "title": "15 Original Songwriting Prompts for Beginners",
+      "excerpt": "Fresh ideas for love songs, reflective lyrics, and uplifting music."
+    }
+  ]
+}

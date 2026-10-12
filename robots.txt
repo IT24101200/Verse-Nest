@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+# Add a Sitemap directive after generating sitemap.xml with your live domain.
