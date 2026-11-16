@@ -4,21 +4,65 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0e18">
-  <meta name="description" content="Sinhala song lyrics and meaning on VerseNest.">
-  <meta property="og:type" content="article">
+  <meta name="description" id="meta-desc" content="Sinhala song lyrics, music metadata, and meaning on VerseNest.">
+  <meta property="og:type" content="music.song">
   <meta property="og:title" id="og-title" content="Sinhala Song Lyrics | VerseNest">
-  <meta property="og:description" id="og-desc" content="Read full Sinhala song lyrics and meaning on VerseNest.">
-  <title id="page-title">Sinhala Song Lyrics | VerseNest</title>
+  <meta property="og:description" id="og-desc" content="Read full song information and authorized lyrics on VerseNest.">
+  <title id="page-title">Sinhala Song | VerseNest</title>
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  
   <style>
-    .loading-box { text-align:center; padding:80px 20px; color:#a8a3b5; font-size:16px; }
-    .loading-box::before { content:''; display:block; width:36px; height:36px; border:3px solid #ffffff20; border-top-color:#efbacf; border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 16px; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    .error-box { padding:40px 24px; text-align:center; background:#191d2c; border:1px solid #ffffff1b; border-radius:14px; margin:40px auto; max-width:600px; }
-    .error-box h2 { font-family:Georgia,serif; font-size:24px; margin-bottom:12px; }
-    .error-box a { display:inline-block; margin-top:16px; color:#241029; background:#ffbcc0; padding:10px 18px; border-radius:8px; font-weight:700; text-decoration:none; }
+    body { font-family: 'Noto Sans Sinhala', Inter, sans-serif; }
+    .rights-banner {
+      background: #191f33;
+      border: 1px solid rgba(255,182,193,0.3);
+      border-left: 4px solid #ffb1bf;
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 14px;
+      line-height: 1.6;
+    }
+    .lyrics-unavailable-box {
+      background: #131726;
+      border: 1px dashed rgba(255,255,255,0.2);
+      border-radius: 12px;
+      padding: 36px 24px;
+      text-align: center;
+      margin: 24px 0;
+    }
+    .youtube-embed-box {
+      margin: 24px 0;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #0f121e;
+      border: 1px solid rgba(255,255,255,0.15);
+      padding: 20px;
+      text-align: center;
+    }
+    .meta-tag-pill {
+      display: inline-block;
+      background: rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      margin-right: 6px;
+      margin-bottom: 6px;
+    }
+    .takedown-link {
+      color: #ff9e7d;
+      font-size: 13px;
+      text-decoration: underline;
+      cursor: pointer;
+    }
   </style>
+
+  <!-- Dynamic JSON-LD Schema placeholder -->
+  <script type="application/ld+json" id="json-ld-schema"></script>
 </head>
 <body>
 
@@ -31,7 +75,7 @@
     </a>
     <nav class="nav" aria-label="Main navigation">
       <a href="../index.html#browse">English</a>
-      <a href="../sinhala.html" style="color:#efbacf">සිංහල</a>
+      <a href="../sinhala.html" style="color:#efbacf;font-weight:700">සිංහල ගීත</a>
       <a href="../index.html#guides">Guides</a>
       <a href="../about.html">About</a>
     </nav>
@@ -39,17 +83,19 @@
 </header>
 
 <main id="main-content">
-  <!-- Loading container -->
-  <div class="loading-box" id="song-loader">ගීතය පූරණය වෙමින්... Loading song details...</div>
-
-  <!-- Error container if song not found -->
-  <div class="error-box" id="song-error" style="display:none">
-    <h2>ගීතය සොයාගත නොහැකි විය / Song Not Found</h2>
-    <p class="muted">The requested song could not be found in our database.</p>
-    <a href="../sinhala.html">← Back to Sinhala Songs</a>
+  <!-- Loading state -->
+  <div class="loading" id="song-loader" style="text-align:center;padding:100px 20px">
+    ගීත විස්තර පූරණය වෙමින්... Loading song catalogue details...
   </div>
 
-  <!-- Song content container -->
+  <!-- Error box -->
+  <div class="shell" id="song-error" style="display:none;padding:80px 20px;text-align:center">
+    <h2>ගීතය සොයාගත නොහැකි විය / Song Not Found</h2>
+    <p class="muted">The requested song could not be found in our verified database.</p>
+    <a href="../sinhala.html" class="btn btn-primary" style="margin-top:20px;display:inline-block">← Back to Song Library</a>
+  </div>
+
+  <!-- Song content -->
   <div id="song-content" style="display:none">
     <section class="page-hero">
       <div class="shell">
@@ -58,12 +104,13 @@
           <span>/</span>
           <a href="../sinhala.html">සිංහල ගීත</a>
           <span>/</span>
-          <span id="crumb-title">Lyrics</span>
+          <span id="crumb-title">Song</span>
         </div>
         <div class="article-head">
           <span class="eyebrow" id="song-eyebrow">Sinhala</span>
           <h1 id="song-title-main">ගීතයේ නම</h1>
-          <p id="song-meta-desc">Artist</p>
+          <p id="song-meta-desc">Artist &amp; Credits</p>
+          <div id="song-pills" style="margin-top:12px"></div>
         </div>
       </div>
     </section>
@@ -72,35 +119,72 @@
       <article class="article">
         <div class="article-actions">
           <button type="button" class="action" id="copy-link">Copy link</button>
-          <a class="action" href="#meaning">Read meaning ↓</a>
+          <a class="action" id="youtube-action-btn" target="_blank" href="#">Official Music Link ↗</a>
+          <a class="action" href="#meaning">Song Context ↓</a>
         </div>
 
-        <div class="lyric-sheet">
-          <span class="mini-label" id="lyric-sheet-label">Sinhala Lyrics</span>
-          <div style="height:20px"></div>
+        <!-- Rights Management Notice -->
+        <div class="rights-banner" id="rights-banner-box">
+          <strong id="rights-status-title">Copyright &amp; Lyrics Status</strong>
+          <p id="rights-status-desc" style="margin:4px 0 0;font-size:13px;color:#d5cee0"></p>
+        </div>
+
+        <!-- Authorized Lyrics Sheet OR Educational Notice -->
+        <div class="lyric-sheet" id="lyrics-display-card">
+          <span class="mini-label" id="lyric-sheet-label">Authorized Lyrics</span>
+          <div style="height:15px"></div>
           <div id="verses-container"></div>
         </div>
 
+        <div class="lyrics-unavailable-box" id="lyrics-unavailable-card" style="display:none">
+          <h3 style="margin-top:0">සම්පූර්ණ පද මාලාව ඇතුළත් කර නොමැත</h3>
+          <p class="muted">Full lyrics are unavailable pending publisher licensing rights. In compliance with copyright laws and Google AdSense policies, VerseNest only publishes authorized or public-domain lyrics.</p>
+          <a id="listen-fallback-btn" class="btn btn-primary" target="_blank" href="#" style="margin-top:14px;display:inline-block">Listen on YouTube / Streaming ↗</a>
+        </div>
+
+        <!-- Song Meaning / Context Card -->
         <section class="content-card" id="meaning">
-          <span class="mini-label">ගීත අර්ථය / Song meaning</span>
-          <h2 id="meaning-heading">ගීතයේ අර්ථය</h2>
-          <p id="meaning-body"></p>
+          <span class="mini-label">ගීතයේ පසුබිම / Editorial Commentary</span>
+          <h2 id="meaning-heading">ගීතය පිළිබඳ තොරතුරු</h2>
+          <p id="meaning-body" style="line-height:1.9"></p>
         </section>
 
+        <!-- Rights Attribution & Takedown Request Notice -->
         <div class="notice">
-          These lyrics are presented for educational and informational purposes. All rights belong to the original artists and composers. For licensing requests, see our <a href="../copyright.html" style="text-decoration:underline">copyright page</a>.
+          Educational metadata index. All composition rights belong to original artists and composers. Copyright owners may request instant lyrics removal via our <span class="takedown-link" onclick="openClaimModal()">Notice &amp; Takedown Portal</span>.
         </div>
       </article>
 
+      <!-- Sidebar -->
       <aside class="aside-panel">
-        <span class="section-kicker">තවත් ගීත / More songs</span>
-        <h3>More to explore</h3>
-        <p>Keep browsing other songs from our Sinhala library.</p>
-        <div class="aside-links" id="more-links"></div>
+        <span class="section-kicker">Same Singer / තවත් ගීත</span>
+        <h3 id="artist-more-heading">More from this Singer</h3>
+        <div class="aside-links" id="same-artist-links"></div>
+
+        <div style="height:25px"></div>
+        <span class="section-kicker">Recommended Songs</span>
+        <h3>Similar Mood &amp; Genre</h3>
+        <div class="aside-links" id="genre-related-links"></div>
       </aside>
     </section>
   </div>
 </main>
+
+<!-- Copyright Claim Modal -->
+<div id="claim-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:999">
+  <div style="background:#171c2e;border:1px solid rgba(255,255,255,0.2);border-radius:14px;padding:30px;max-width:480px;width:90%">
+    <h3 style="margin-top:0">Copyright Notice &amp; Takedown</h3>
+    <p style="font-size:13px;color:#aaa">If you are the copyright holder and wish to restrict lyrics publication, please submit this notice:</p>
+    <input type="text" id="cl-name" placeholder="Your Name" style="width:100%;padding:8px 12px;margin:8px 0;background:#0d101b;border:1px solid #444;border-radius:6px;color:#fff">
+    <input type="email" id="cl-email" placeholder="Your Email" style="width:100%;padding:8px 12px;margin:8px 0;background:#0d101b;border:1px solid #444;border-radius:6px;color:#fff">
+    <input type="text" id="cl-rel" placeholder="Relationship (e.g. Composer, Lyricist, Label)" style="width:100%;padding:8px 12px;margin:8px 0;background:#0d101b;border:1px solid #444;border-radius:6px;color:#fff">
+    <textarea id="cl-details" rows="3" placeholder="Details of your request..." style="width:100%;padding:8px 12px;margin:8px 0;background:#0d101b;border:1px solid #444;border-radius:6px;color:#fff"></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+      <button class="btn btn-secondary" onclick="closeClaimModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="submitTakedown()">Submit Notice</button>
+    </div>
+  </div>
+</div>
 
 <!-- Footer -->
 <footer class="footer">
@@ -108,141 +192,185 @@
     <div class="footer-grid">
       <div>
         <a class="brand" href="../index.html">
-          <span class="brand-mark" aria-hidden="true">♫</span>
+          <span class="brand-mark">♫</span>
           <span>Verse<span> Nest</span></span>
         </a>
-        <p>Original lyrics and Sinhala song lyrics collection.</p>
+        <p>A modern, educational discovery platform celebrating Sri Lankan music, poetry, and songwriting heritage.</p>
       </div>
       <div class="footer-links">
         <a href="../about.html">About</a>
         <a href="../contact.html">Contact</a>
+        <a href="../copyright.html">Copyright &amp; Takedown</a>
         <a href="../privacy.html">Privacy</a>
         <a href="../terms.html">Terms</a>
-        <a href="../copyright.html">Copyright</a>
       </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© 2026 VerseNest Originals.</span>
-      <span></span>
     </div>
   </div>
 </footer>
 
 <script>
-// Dynamic Sinhala Song Renderer
+let currentSongId = null;
+
 (function() {
   const params = new URLSearchParams(window.location.search);
-  const songParam = params.get('song') || params.get('id');
+  const songId = params.get('song') || params.get('id');
 
-  const loader = document.getElementById('song-loader');
-  const errorBox = document.getElementById('song-error');
-  const content = document.getElementById('song-content');
-
-  if (!songParam) {
-    loader.style.display = 'none';
-    errorBox.style.display = 'block';
+  if (!songId) {
+    document.getElementById('song-loader').style.display = 'none';
+    document.getElementById('song-error').style.display = 'block';
     return;
   }
+  currentSongId = songId;
 
-  fetch('../data/sinhala-songs.json')
-    .then(res => res.json())
-    .then(data => {
-      const songs = data.songs || [];
-      // Look up by numeric id or slug
-      const songId = parseInt(songParam, 10);
-      const song = isNaN(songId)
-        ? songs.find(s => s.slug === songParam.toLowerCase())
-        : songs.find(s => s.id === songId);
-
-      if (!song) {
-        loader.style.display = 'none';
-        errorBox.style.display = 'block';
-        return;
-      }
-
-      // Populate page title & meta
-      const fullTitle = song.title_si + ' (' + song.title_en + ')';
-      document.title = fullTitle + ' – Lyrics | VerseNest';
+  fetch(`/api/songs/${encodeURIComponent(songId)}`)
+    .then(res => {
+      if (!res.ok) throw new Error('Not found');
+      return res.json();
+    })
+    .then(song => {
+      // Set Title & Meta
+      const fullTitle = `${song.title_si} (${song.title_en})`;
+      document.title = `${fullTitle} – Song Details & Meaning | VerseNest`;
       document.getElementById('crumb-title').textContent = song.title_si;
-      let eyebrowText = 'Sinhala · ' + song.genre;
-      if (song.is_recent) {
-        eyebrowText += ' · 🔥 Recent Hit (' + (song.release_year || 'Trending') + ')';
-      } else if (song.is_famous) {
-        eyebrowText += ' · ★ Classic';
-      }
-      document.getElementById('song-eyebrow').textContent = eyebrowText;
       document.getElementById('song-title-main').textContent = fullTitle;
-      document.getElementById('song-meta-desc').textContent = song.artist + (song.lyricist ? ' · පද රචනය: ' + song.lyricist : '') + (song.release_year ? ' · නිකුත් වූ වසර: ' + song.release_year : '') + ' · ' + song.genre;
-      document.getElementById('lyric-sheet-label').textContent = 'Sinhala Lyrics · ' + song.artist;
-      document.getElementById('meaning-heading').textContent = '"' + song.title_si + '" ගීතයේ අර්ථය';
-      document.getElementById('meaning-body').textContent = song.meaning;
+      
+      let creditParts = [song.artist];
+      if (song.lyricist) creditParts.push(`පද රචනය: ${song.lyricist}`);
+      if (song.composer) creditParts.push(`සංගීතය: ${song.composer}`);
+      if (song.release_year) creditParts.push(`වසර: ${song.release_year}`);
+      document.getElementById('song-meta-desc').textContent = creditParts.join(' · ');
 
-      // Populate verses
-      const versesContainer = document.getElementById('verses-container');
-      versesContainer.innerHTML = '';
-      (song.verses || []).forEach(v => {
-        const sec = document.createElement('section');
-        sec.className = 'lyric-section';
-        const h2 = document.createElement('h2');
-        h2.textContent = v.label;
-        const lines = document.createElement('div');
-        lines.className = 'lyric-lines';
-        lines.textContent = v.lines;
-        sec.appendChild(h2);
-        sec.appendChild(lines);
-        versesContainer.appendChild(sec);
-      });
+      // Metadata Pills
+      const pillsBox = document.getElementById('song-pills');
+      pillsBox.innerHTML = `
+        <span class="meta-tag-pill">ශෛලිය: ${song.genre}</span>
+        <span class="meta-tag-pill">දශකය: ${song.era_decade || 'Unknown'}</span>
+        ${song.is_classic ? '<span class="meta-tag-pill" style="color:#ffb1bf">★ Classic Masterpiece</span>' : ''}
+        ${song.is_recent ? '<span class="meta-tag-pill" style="color:#ff9e7d">🔥 Recent Release</span>' : ''}
+      `;
 
-      // Populate more songs in sidebar
-      const moreLinks = document.getElementById('more-links');
-      moreLinks.innerHTML = '';
-      // Pick 3 adjacent or random songs
-      const currentIndex = songs.findIndex(s => s.id === song.id);
-      const nextCandidates = [
-        songs[(currentIndex + 1) % songs.length],
-        songs[(currentIndex + 2) % songs.length],
-        songs[(currentIndex + 3) % songs.length]
-      ];
+      // Rights Management Enforcement
+      document.getElementById('rights-status-desc').textContent = song.rights_notice;
+      const lyricsCard = document.getElementById('lyrics-display-card');
+      const unavailCard = document.getElementById('lyrics-unavailable-card');
 
-      nextCandidates.forEach(s => {
-        if (s) {
-          const a = document.createElement('a');
-          a.href = 'sinhala-song.html?song=' + s.id;
-          a.textContent = '♫ ' + s.title_si + ' (' + s.artist + ') →';
-          moreLinks.appendChild(a);
-        }
-      });
-
-      const browseAll = document.createElement('a');
-      browseAll.href = '../sinhala.html';
-      browseAll.textContent = 'Browse all 5000+ Sinhala songs →';
-      moreLinks.appendChild(browseAll);
-
-      // Copy link button handler
-      const copyBtn = document.getElementById('copy-link');
-      if (copyBtn) {
-        copyBtn.addEventListener('click', async () => {
-          try {
-            await navigator.clipboard.writeText(window.location.href);
-            copyBtn.textContent = 'Link copied ✓';
-          } catch(e) {
-            copyBtn.textContent = 'Copy this page URL';
-          }
-          setTimeout(() => { copyBtn.textContent = 'Copy link'; }, 2000);
+      if (song.can_publish_lyrics && song.lyrics) {
+        lyricsCard.style.display = 'block';
+        unavailCard.style.display = 'none';
+        document.getElementById('lyric-sheet-label').textContent = `Authorized Lyrics · ${song.artist}`;
+        
+        const vContainer = document.getElementById('verses-container');
+        vContainer.innerHTML = '';
+        const lines = song.lyrics.split('\n\n');
+        lines.forEach(block => {
+          const sec = document.createElement('section');
+          sec.className = 'lyric-section';
+          const div = document.createElement('div');
+          div.className = 'lyric-lines';
+          div.textContent = block;
+          sec.appendChild(div);
+          vContainer.appendChild(sec);
         });
+      } else {
+        lyricsCard.style.display = 'none';
+        unavailCard.style.display = 'block';
       }
 
-      // Show content
-      loader.style.display = 'none';
-      content.style.display = 'block';
+      // External Music Links
+      const ytBtn = document.getElementById('youtube-action-btn');
+      const fallbackBtn = document.getElementById('listen-fallback-btn');
+      const ytUrl = song.youtube_url || `https://www.youtube.com/results?search_query=${encodeURIComponent(song.title_en)}+${encodeURIComponent(song.artist)}`;
+      ytBtn.href = ytUrl;
+      fallbackBtn.href = ytUrl;
+
+      // Meaning / Commentary
+      document.getElementById('meaning-heading').textContent = `"${song.title_si}" ගීතය පිළිබඳ විග්‍රහය`;
+      document.getElementById('meaning-body').textContent = song.editorial_commentary || song.description || 'මෙම ගීතය ශ්‍රී ලාංකේය සංගීත ක්ෂේත්‍රයේ අගනා නිර්මාණයකි.';
+
+      // Same Artist Recommendations
+      const artistLinks = document.getElementById('same-artist-links');
+      artistLinks.innerHTML = '';
+      (song.same_artist_songs || []).forEach(s => {
+        artistLinks.innerHTML += `<a href="sinhala-song.html?song=${s.id}">♫ ${s.title_si} (${s.genre}) →</a>`;
+      });
+      if (!song.same_artist_songs || !song.same_artist_songs.length) {
+        artistLinks.innerHTML = '<span class="muted" style="font-size:12px">No other catalogued songs for this artist yet.</span>';
+      }
+
+      // Genre Related Recommendations
+      const genreLinks = document.getElementById('genre-related-links');
+      genreLinks.innerHTML = '';
+      (song.genre_related_songs || []).forEach(s => {
+        genreLinks.innerHTML += `<a href="sinhala-song.html?song=${s.id}">♫ ${s.title_si} – ${s.artist} →</a>`;
+      });
+
+      // Inject Schema.org Structured Data for SEO
+      const schema = {
+        "@context": "https://schema.org",
+        "@type": "MusicRecording",
+        "name": song.title_si,
+        "alternateName": song.title_en,
+        "byArtist": {
+          "@type": "MusicGroup",
+          "name": song.artist
+        },
+        "genre": song.genre,
+        "datePublished": song.release_year ? String(song.release_year) : undefined,
+        "inLanguage": "si"
+      };
+      if (song.lyricist) schema["lyricist"] = {"@type": "Person", "name": song.lyricist};
+      if (song.composer) schema["composer"] = {"@type": "Person", "name": song.composer};
+      document.getElementById('json-ld-schema').textContent = JSON.stringify(schema);
+
+      // Show loaded UI
+      document.getElementById('song-loader').style.display = 'none';
+      document.getElementById('song-content').style.display = 'block';
     })
     .catch(err => {
       console.error(err);
-      loader.style.display = 'none';
-      errorBox.style.display = 'block';
+      document.getElementById('song-loader').style.display = 'none';
+      document.getElementById('song-error').style.display = 'block';
     });
-})();
-</script>
 
+  // Copy link handler
+  document.getElementById('copy-link').addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      document.getElementById('copy-link').textContent = 'Link copied ✓';
+    } catch(e) {
+      document.getElementById('copy-link').textContent = 'Copy this page URL';
+    }
+    setTimeout(() => { document.getElementById('copy-link').textContent = 'Copy link'; }, 2000);
+  });
+})();
+
+function openClaimModal() {
+  document.getElementById('claim-modal').style.display = 'flex';
+}
+function closeClaimModal() {
+  document.getElementById('claim-modal').style.display = 'none';
+}
+async function submitTakedown() {
+  const n = document.getElementById('cl-name').value.trim();
+  const e = document.getElementById('cl-email').value.trim();
+  const r = document.getElementById('cl-rel').value.trim();
+  const d = document.getElementById('cl-details').value.trim();
+  if (!n || !e || !d) { alert('Please fill in name, email, and details.'); return; }
+
+  await fetch('/api/copyright/report', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      song_id: parseInt(currentSongId),
+      claimant_name: n,
+      claimant_email: e,
+      relationship: r,
+      claim_details: d
+    })
+  });
+  alert('Thank you. Your notice has been registered with our editorial administration team.');
+  closeClaimModal();
+}
+</script>
 </body>
 </html>

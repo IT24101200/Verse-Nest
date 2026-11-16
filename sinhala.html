@@ -4,31 +4,120 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0e18">
-  <meta name="description" content="Browse 5000+ Sinhala song lyrics. Search by song name, artist, or genre. සිංහල ගීත පද 5000+">
+  <meta name="description" content="Explore Sri Lanka's largest Sinhala song catalogue. From timeless classics by Amaradeva and Milton to the latest 2024 releases. Full search in Sinhala and English.">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="සිංහල ගීත | Sinhala Songs | VerseNest">
-  <meta property="og:description" content="Browse 5000+ Sinhala song lyrics with search and filters.">
-  <title>සිංහල ගීත | Sinhala Songs | VerseNest</title>
+  <meta property="og:title" content="VerseNest — Sinhala Song &amp; Lyrics Discovery Platform">
+  <meta property="og:description" content="Search thousands of Sinhala songs by title, singer, lyricist, genre, and decade with English transliteration support.">
+  <title>සිංහල ගීත එකතුව | Sinhala Song Discovery | VerseNest</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/styles.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  
   <style>
-    /* Pagination styles */
-    .pagination { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:30px; }
+    :root {
+      --font-sinhala: 'Noto Sans Sinhala', 'Inter', system-ui, sans-serif;
+    }
+    body {
+      font-family: var(--font-sinhala);
+    }
+    .theme-light {
+      --bg: #f9f8fc;
+      --card-bg: #ffffff;
+      --text-main: #1d1b28;
+      --text-muted: #6b6678;
+      --border-color: rgba(0,0,0,0.12);
+      background: var(--bg) !important;
+      color: var(--text-main) !important;
+    }
+    .theme-light .site-header {
+      background: rgba(255,255,255,0.92) !important;
+      border-bottom: 1px solid rgba(0,0,0,0.1) !important;
+    }
+    .theme-light .lyric-card, .theme-light .feature, .theme-light .stat-card {
+      background: #ffffff !important;
+      border-color: rgba(0,0,0,0.12) !important;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+    }
+    .theme-light .search-wrap {
+      background: #ffffff !important;
+      border-color: rgba(0,0,0,0.2) !important;
+    }
+    .theme-light .search-wrap input {
+      color: #111 !important;
+    }
+    .theme-toggle-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: inherit;
+      border-radius: 99px;
+      padding: 6px 14px;
+      font-size: 13px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    /* Suggestions Dropdown */
+    .autocomplete-wrap {
+      position: relative;
+      flex: 1;
+    }
+    .suggestions-box {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #181d2e;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      margin-top: 6px;
+      max-height: 320px;
+      overflow-y: auto;
+      z-index: 50;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+      display: none;
+    }
+    .suggestion-item {
+      padding: 12px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .suggestion-item:hover {
+      background: rgba(255,255,255,0.08);
+    }
+    .suggestion-item strong { color: #ffb8c5; font-size: 14px; }
+    .suggestion-item small { color: #a49cb5; font-size: 12px; }
+    /* Control filters bar */
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      margin: 20px 0;
+    }
+    .select-dropdown {
+      background: #191d2c;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #f2edf8;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+    }
+    .pagination { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:36px; }
     .pagination button { min-width:40px; height:40px; border:1px solid #ffffff26; background:transparent; color:#c6c0d0; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
     .pagination button.active { background:#efbacf; color:#281527; border-color:#efbacf; }
     .pagination button:hover:not(.active) { background:#ffffff15; }
     .pagination button:disabled { opacity:.4; cursor:default; }
-    /* Loading spinner */
-    .loading { text-align:center; padding:60px 20px; color:#a8a3b5; font-size:15px; }
-    .loading::before { content:''; display:block; width:36px; height:36px; border:3px solid #ffffff20; border-top-color:#efbacf; border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 16px; }
-    @keyframes spin { to { transform:rotate(360deg); } }
-    /* Song count badge */
-    .song-count { background:#efbacf22; color:#efbacf; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:800; }
-    /* Genre filter chips row */
-    .genre-filters { display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 0; }
-    .genre-chip { border-radius:100px; border:1px solid #ffffff16; background:transparent; color:#a8a3b5; padding:6px 12px; font-size:12px; cursor:pointer; }
-    .genre-chip.active { background:#7060a6; color:#fff; border-color:#7060a6; }
-    .genre-chip:hover:not(.active) { background:#ffffff10; }
+    .badge-classic { background: rgba(255,182,193,0.18); color: #ffb1bf; border: 1px solid #ffb1bf; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+    .badge-recent { background: rgba(255,158,125,0.18); color: #ff9e7d; border: 1px solid #ff9e7d; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
   </style>
 </head>
 <body>
@@ -42,9 +131,12 @@
     </a>
     <nav class="nav" aria-label="Main navigation">
       <a href="index.html#browse">English</a>
-      <a href="sinhala.html" style="color:#efbacf">සිංහල</a>
+      <a href="sinhala.html" style="color:#efbacf;font-weight:700">සිංහල ගීත</a>
       <a href="index.html#guides">Guides</a>
       <a href="about.html">About</a>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark and light theme">
+        <span>🌓</span> Theme
+      </button>
     </nav>
   </div>
 </header>
@@ -55,57 +147,73 @@
   <section class="page-hero">
     <div class="shell">
       <div class="breadcrumbs">
-        <a href="index.html">Home</a><span>/</span><span>සිංහල ගීත / Sinhala Songs</span>
+        <a href="index.html">Home</a><span>/</span><span>සිංහල ගීත එකතුව / Sinhala Song Library</span>
       </div>
       <div class="page-heading">
-        <span class="eyebrow">සිංහල ගීත එකතුව</span>
-        <h1>සිංහල ගීත පද<br>Sinhala Song Lyrics</h1>
-        <p>Browse our collection of <span class="song-count" id="total-count">5000+</span> Sinhala songs. Search by song name, artist, or genre.</p>
+        <span class="eyebrow">සම්පූර්ණ සිංහල ගීතාවලිය · Sinhala Music Archive</span>
+        <h1>සිංහල ගීත පද හා තොරතුරු<br>Sinhala Song &amp; Lyrics Discovery</h1>
+        <p>Explore Sri Lanka's largest practical catalogue of <span id="stat-total-badge" style="background:#ffb8c522;color:#ffb8c5;padding:3px 10px;border-radius:20px;font-weight:700">5000+ Verified Songs</span>. Search by title in Sinhala or English, singer, lyricist, era, or genre.</p>
       </div>
     </div>
   </section>
 
-  <!-- Browse Section -->
+  <!-- Browse & Search Section -->
   <section class="section" id="browse-sinhala">
     <div class="shell">
 
-      <!-- Search bar -->
+      <!-- Search Row with Transliteration & Suggestions -->
       <div class="search-row">
-        <label class="search-wrap">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d5bccd" stroke-width="2" aria-hidden="true">
-            <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>
-          </svg>
-          <span class="visually-hidden">Search Sinhala songs</span>
-          <input id="song-search" type="search" autocomplete="off" placeholder="ගීතයක් සොයන්න / Search by song, artist, or genre...">
-        </label>
+        <div class="autocomplete-wrap">
+          <label class="search-wrap" style="width:100%">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d5bccd" stroke-width="2" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>
+            </svg>
+            <span class="visually-hidden">Search Sinhala songs</span>
+            <input id="song-search" type="search" autocomplete="off" placeholder="ගීතයේ නම හෝ ගායකයා සොයන්න (Type in Sinhala or English, e.g. 'sanda', 'oba nisa', 'amaradeva')...">
+          </label>
+          <div class="suggestions-box" id="suggestions-box"></div>
+        </div>
       </div>
 
-      <!-- Genre filter chips -->
-      <div class="genre-filters" id="genre-filters">
-        <button type="button" class="genre-chip active" data-genre="All">All</button>
-        <button type="button" class="genre-chip" data-genre="Recent" style="border-color:#ff9e7d;color:#ff9e7d;font-weight:700">🔥 Recent Hits (නව ගීත)</button>
-        <button type="button" class="genre-chip" data-genre="Famous" style="border-color:#ffb1bf;color:#ffb1bf;font-weight:700">★ Famous Classics (නියම ගීත)</button>
-        <!-- Genres are added dynamically by JS -->
+      <!-- Quick Quick-Filter Chips -->
+      <div class="genre-filters" id="quick-filters">
+        <button type="button" class="genre-chip active" data-type="all">සියලුම ගීත (All)</button>
+        <button type="button" class="genre-chip" data-type="recent" style="border-color:#ff9e7d;color:#ff9e7d;font-weight:700">🔥 Recent Hits (නව ගීත)</button>
+        <button type="button" class="genre-chip" data-type="classic" style="border-color:#ffb1bf;color:#ffb1bf;font-weight:700">★ Old Classics (සම්භාව්‍ය)</button>
       </div>
 
-      <!-- Results count -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin:20px 0 10px">
-        <span class="muted" id="result-count" aria-live="polite">Loading...</span>
-        <span class="muted" id="page-info"></span>
+      <!-- Controls & Dropdowns Bar -->
+      <div class="controls-bar">
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <select id="genre-select" class="select-dropdown" onchange="triggerFilterChange()">
+            <option value="All">All Genres / ශෛලීන්</option>
+          </select>
+          <select id="decade-select" class="select-dropdown" onchange="triggerFilterChange()">
+            <option value="All">All Eras / දශක</option>
+          </select>
+          <select id="sort-select" class="select-dropdown" onchange="triggerFilterChange()">
+            <option value="relevance">Sort: Most Relevant</option>
+            <option value="popular">Sort: Most Popular</option>
+            <option value="newest">Sort: Recently Added</option>
+            <option value="title">Sort: Title (A-Z / අ-ෆ)</option>
+          </select>
+        </div>
+        <div style="font-size:13px;color:#a8a3b5">
+          <span id="result-count">Loading songs...</span>
+        </div>
       </div>
 
-      <!-- Song cards grid -->
+      <!-- Song Grid -->
       <div class="card-grid" id="song-grid"></div>
 
-      <!-- Loading state -->
-      <div class="loading" id="loading-state">සිංහල ගීත පූරණය වෙමින්... Loading songs...</div>
-
-      <!-- Empty state -->
-      <div class="empty" id="empty-state" role="status" style="display:none">
-        No songs match your search. Try another title, artist or genre.
+      <!-- Empty State -->
+      <div class="empty" id="empty-state" role="status" style="display:none;padding:50px 20px;text-align:center">
+        <h3>ගීත සොයාගත නොහැකි විය / No matching songs found</h3>
+        <p class="muted" style="margin-top:8px">Try searching by artist name, single word (e.g. 'sanda' or 'තරු'), or reset the filters.</p>
+        <button class="btn btn-secondary" onclick="resetSearch()" style="margin-top:16px">Reset All Filters</button>
       </div>
 
-      <!-- Pagination -->
+      <!-- Pagination Controls -->
       <div class="pagination" id="pagination"></div>
 
     </div>
@@ -122,240 +230,253 @@
           <span class="brand-mark" aria-hidden="true">♫</span>
           <span>Verse<span> Nest</span></span>
         </a>
-        <p>Original lyrics and Sinhala song lyrics collection.</p>
+        <p>A modern, educational discovery platform celebrating Sri Lankan music, poetry, and songwriting heritage. All lyrics published strictly under authorized rights.</p>
       </div>
       <div class="footer-links">
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
+        <a href="copyright.html">Copyright &amp; Takedown</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
-        <a href="copyright.html">Copyright</a>
+        <a href="admin.html" style="color:#ffb8c5">Admin Portal</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <span>© 2026 VerseNest Originals.</span>
-      <span></span>
+      <span>© 2026 VerseNest Originals. Sri Lankan Music Discovery Project.</span>
+      <span>AdSense Compliant · Zero scraped lyrics policy</span>
     </div>
   </div>
 </footer>
 
 <script>
-// Sinhala Songs Browse Page Script
-(function() {
-  const SONGS_PER_PAGE = 48;
-  let allSongs = [];
-  let filteredSongs = [];
-  let currentPage = 1;
-  let currentGenre = 'All';
-  let searchQuery = '';
+// State Management
+let currentPage = 1;
+let currentSearch = '';
+let currentFilterType = 'all'; // 'all', 'recent', 'classic'
+let currentGenre = 'All';
+let currentDecade = 'All';
+let currentSort = 'relevance';
 
-  // Color pairs for card art backgrounds
-  const colors = [
-    ['#6a3b81','#332948'], ['#a65d71','#333453'], ['#345a80','#2a2f54'],
-    ['#9b7252','#453f69'], ['#3e777f','#2a305c'], ['#7060a6','#39334d'],
-    ['#8b5e3c','#3d2b4f'], ['#5a7a3e','#2d3b28'], ['#7a3b5e','#3b2848'],
-    ['#3b6a81','#283249'], ['#81553b','#493228'], ['#3b8170','#284942']
-  ];
+const colors = [
+  ['#6a3b81','#332948'], ['#a65d71','#333453'], ['#345a80','#2a2f54'],
+  ['#9b7252','#453f69'], ['#3e777f','#2a305c'], ['#7060a6','#39334d'],
+  ['#8b5e3c','#3d2b4f'], ['#5a7a3e','#2d3b28'], ['#7a3b5e','#3b2848'],
+  ['#3b6a81','#283249']
+];
 
-  // DOM elements
-  const grid = document.getElementById('song-grid');
-  const searchInput = document.getElementById('song-search');
-  const resultCount = document.getElementById('result-count');
-  const pageInfo = document.getElementById('page-info');
-  const pagination = document.getElementById('pagination');
-  const emptyState = document.getElementById('empty-state');
-  const loadingState = document.getElementById('loading-state');
-  const genreFilters = document.getElementById('genre-filters');
-  const totalCount = document.getElementById('total-count');
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
+  loadFilterDropdowns();
+  loadSongs();
+  setupSearchInput();
+});
 
-  // Load songs from JSON
-  fetch('data/sinhala-songs.json')
-    .then(r => r.json())
-    .then(data => {
-      allSongs = data.songs;
-      totalCount.textContent = allSongs.length + ' songs';
-      loadingState.style.display = 'none';
-      buildGenreFilters();
-      applyFilters();
-    })
-    .catch(err => {
-      loadingState.textContent = 'Error loading songs. Please refresh.';
-      console.error(err);
-    });
+function initTheme() {
+  const saved = localStorage.getItem('versenest_theme') || 'dark';
+  if (saved === 'light') document.body.classList.add('theme-light');
+}
 
-  // Build genre filter buttons
-  function buildGenreFilters() {
-    const genres = [...new Set(allSongs.map(s => s.genre))].sort();
+function toggleTheme() {
+  document.body.classList.toggle('theme-light');
+  const isLight = document.body.classList.contains('theme-light');
+  localStorage.setItem('versenest_theme', isLight ? 'light' : 'dark');
+}
+
+async function loadFilterDropdowns() {
+  try {
+    // Genres
+    const gRes = await fetch('/api/genres');
+    const genres = await gRes.json();
+    const gSelect = document.getElementById('genre-select');
     genres.forEach(g => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'genre-chip';
-      btn.dataset.genre = g;
-      btn.textContent = g;
-      btn.addEventListener('click', () => {
-        currentGenre = g;
-        currentPage = 1;
-        // Update active state
-        genreFilters.querySelectorAll('.genre-chip').forEach(b => b.classList.toggle('active', b.dataset.genre === g));
-        applyFilters();
-      });
-      genreFilters.appendChild(btn);
+      const opt = document.createElement('option');
+      opt.value = g.genre;
+      opt.textContent = `${g.genre} (${g.count})`;
+      gSelect.appendChild(opt);
     });
 
-    // "All" button click handler
-    genreFilters.querySelector('[data-genre="All"]').addEventListener('click', () => {
-      currentGenre = 'All';
-      currentPage = 1;
-      genreFilters.querySelectorAll('.genre-chip').forEach(b => b.classList.toggle('active', b.dataset.genre === 'All'));
-      applyFilters();
+    // Decades
+    const dRes = await fetch('/api/decades');
+    const decades = await dRes.json();
+    const dSelect = document.getElementById('decade-select');
+    decades.forEach(d => {
+      const opt = document.createElement('option');
+      opt.value = d.decade;
+      opt.textContent = `${d.decade} (${d.count})`;
+      dSelect.appendChild(opt);
     });
 
-    // "Recent" button click handler
-    const recentBtn = genreFilters.querySelector('[data-genre="Recent"]');
-    if (recentBtn) {
-      recentBtn.addEventListener('click', () => {
-        currentGenre = 'Recent';
-        currentPage = 1;
-        genreFilters.querySelectorAll('.genre-chip').forEach(b => b.classList.toggle('active', b.dataset.genre === 'Recent'));
-        applyFilters();
-      });
+    // Platform stats
+    const stRes = await fetch('/api/stats');
+    const stats = await stRes.json();
+    document.getElementById('stat-total-badge').textContent = `${stats.total_songs.toLocaleString()} Verified Songs`;
+  } catch(e) { console.error('Filter dropdown load error:', e); }
+}
+
+async function loadSongs() {
+  const grid = document.getElementById('song-grid');
+  const resultCount = document.getElementById('result-count');
+  const emptyState = document.getElementById('empty-state');
+  resultCount.textContent = 'Loading songs...';
+
+  let url = `/api/songs?page=${currentPage}&page_size=24&sort_by=${currentSort}`;
+  if (currentSearch) url += `&q=${encodeURIComponent(currentSearch)}`;
+  if (currentGenre !== 'All') url += `&genre=${encodeURIComponent(currentGenre)}`;
+  if (currentDecade !== 'All') url += `&decade=${encodeURIComponent(currentDecade)}`;
+  if (currentFilterType === 'recent') url += `&category=2020s`;
+  if (currentFilterType === 'classic') url += `&category=classics`;
+
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+
+    resultCount.textContent = `${data.total_count.toLocaleString()} songs found · Page ${data.page} of ${data.total_pages || 1}`;
+    
+    if (!data.songs.length) {
+      grid.innerHTML = '';
+      emptyState.style.display = 'block';
+      document.getElementById('pagination').innerHTML = '';
+      return;
     }
 
-    // "Famous" button click handler
-    const famousBtn = genreFilters.querySelector('[data-genre="Famous"]');
-    if (famousBtn) {
-      famousBtn.addEventListener('click', () => {
-        currentGenre = 'Famous';
-        currentPage = 1;
-        genreFilters.querySelectorAll('.genre-chip').forEach(b => b.classList.toggle('active', b.dataset.genre === 'Famous'));
-        applyFilters();
-      });
-    }
-  }
-
-  // Search input handler with debounce
-  let searchTimeout;
-  searchInput.addEventListener('input', () => {
-    clearTimeout(searchTimeout);
-    searchTimeout = setTimeout(() => {
-      searchQuery = searchInput.value.trim().toLowerCase();
-      currentPage = 1;
-      applyFilters();
-    }, 250);
-  });
-
-  // Filter and render
-  function applyFilters() {
-    filteredSongs = allSongs.filter(song => {
-      // Genre filter
-      if (currentGenre === 'Recent') {
-        if (!song.is_recent) return false;
-      } else if (currentGenre === 'Famous') {
-        if (!song.is_famous) return false;
-      } else if (currentGenre !== 'All' && song.genre !== currentGenre) {
-        return false;
-      }
-      // Search filter
-      if (searchQuery) {
-        const searchStr = (song.title_si + ' ' + song.title_en + ' ' + song.artist + ' ' + (song.lyricist || '') + ' ' + song.genre).toLowerCase();
-        return searchStr.includes(searchQuery);
-      }
-      return true;
-    });
-    renderPage();
-  }
-
-  // Render current page of songs
-  function renderPage() {
-    const totalPages = Math.ceil(filteredSongs.length / SONGS_PER_PAGE);
-    if (currentPage > totalPages) currentPage = totalPages || 1;
-
-    const start = (currentPage - 1) * SONGS_PER_PAGE;
-    const end = start + SONGS_PER_PAGE;
-    const pageSongs = filteredSongs.slice(start, end);
-
-    // Update count text
-    resultCount.textContent = filteredSongs.length + ' ' + (filteredSongs.length === 1 ? 'song' : 'songs') + ' found';
-    pageInfo.textContent = totalPages > 1 ? ('Page ' + currentPage + ' of ' + totalPages) : '';
-
-    // Show/hide empty state
-    emptyState.style.display = pageSongs.length ? 'none' : 'block';
-
-    // Build card HTML
+    emptyState.style.display = 'none';
     let html = '';
-    pageSongs.forEach((song, i) => {
-      const c = colors[(start + i) % colors.length];
+    data.songs.forEach((s, idx) => {
+      const c = colors[idx % colors.length];
       let badge = '';
-      if (song.is_recent) {
-        badge = ' <span style="background:#ff9e7d2b;color:#ff9e7d;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700">🔥 New (' + (song.release_year || 'Recent') + ')</span>';
-      } else if (song.is_famous) {
-        badge = ' <span style="background:#ffb1bf2b;color:#ffb1bf;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700">★ Classic</span>';
-      }
-      html += '<a class="lyric-card" href="lyrics/sinhala-song.html?song=' + song.id + '">'
-        + '<div class="art" style="--art-start:' + c[0] + ';--art-end:' + c[1] + '" aria-hidden="true"></div>'
-        + '<div class="card-body">'
-        + '<div class="card-meta">Sinhala · ' + song.genre + badge + '</div>'
-        + '<h3>' + song.title_si + '</h3>'
-        + '<p>' + song.title_en + ' — ' + song.artist + (song.lyricist ? ' (පද: ' + song.lyricist + ')' : '') + '</p>'
-        + '<span class="read-link">Read lyrics →</span>'
-        + '</div></a>';
+      if (s.is_recent) badge = ' <span class="badge-recent">🔥 Recent</span>';
+      else if (s.is_classic) badge = ' <span class="badge-classic">★ Classic</span>';
+
+      html += `
+        <a class="lyric-card" href="lyrics/sinhala-song.html?song=${s.id}">
+          <div class="art" style="--art-start:${c[0]};--art-end:${c[1]}" aria-hidden="true"></div>
+          <div class="card-body">
+            <div class="card-meta">Sinhala · ${s.genre}${badge}</div>
+            <h3>${s.title_si}</h3>
+            <p>${s.title_en} — ${s.artist}${s.lyricist ? ' (පද: ' + s.lyricist + ')' : ''}</p>
+            <span class="read-link">Explore song &amp; details →</span>
+          </div>
+        </a>
+      `;
     });
     grid.innerHTML = html;
-
-    // Build pagination
-    renderPagination(totalPages);
-
-    // Scroll to top of grid on page change
-    if (currentPage > 1) {
-      document.getElementById('browse-sinhala').scrollIntoView({ behavior: 'smooth' });
-    }
+    renderPagination(data.total_pages);
+  } catch(e) {
+    console.error('Error fetching songs:', e);
+    resultCount.textContent = 'Error connecting to database.';
   }
+}
 
-  // Render pagination buttons
-  function renderPagination(totalPages) {
-    if (totalPages <= 1) { pagination.innerHTML = ''; return; }
+function renderPagination(totalPages) {
+  const container = document.getElementById('pagination');
+  if (totalPages <= 1) { container.innerHTML = ''; return; }
 
-    let html = '';
-    // Previous button
-    html += '<button ' + (currentPage === 1 ? 'disabled' : '') + ' data-page="' + (currentPage - 1) + '">‹</button>';
+  let html = `<button ${currentPage === 1 ? 'disabled' : ''} onclick="gotoPage(${currentPage - 1})">‹ Prev</button>`;
+  let start = Math.max(1, currentPage - 3);
+  let end = Math.min(totalPages, currentPage + 3);
 
-    // Page numbers (show max 7 pages around current)
-    const range = getPageRange(currentPage, totalPages, 7);
-    if (range[0] > 1) {
-      html += '<button data-page="1">1</button>';
-      if (range[0] > 2) html += '<button disabled>…</button>';
-    }
-    for (let p = range[0]; p <= range[1]; p++) {
-      html += '<button data-page="' + p + '"' + (p === currentPage ? ' class="active"' : '') + '>' + p + '</button>';
-    }
-    if (range[1] < totalPages) {
-      if (range[1] < totalPages - 1) html += '<button disabled>…</button>';
-      html += '<button data-page="' + totalPages + '">' + totalPages + '</button>';
-    }
-
-    // Next button
-    html += '<button ' + (currentPage === totalPages ? 'disabled' : '') + ' data-page="' + (currentPage + 1) + '">›</button>';
-
-    pagination.innerHTML = html;
-
-    // Add click handlers
-    pagination.querySelectorAll('button[data-page]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        currentPage = parseInt(btn.dataset.page);
-        renderPage();
-      });
-    });
+  if (start > 1) html += `<button onclick="gotoPage(1)">1</button>${start > 2 ? '<button disabled>…</button>' : ''}`;
+  for (let p = start; p <= end; p++) {
+    html += `<button class="${p === currentPage ? 'active' : ''}" onclick="gotoPage(${p})">${p}</button>`;
   }
+  if (end < totalPages) html += `${end < totalPages - 1 ? '<button disabled>…</button>' : ''}<button onclick="gotoPage(${totalPages})">${totalPages}</button>`;
+  html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="gotoPage(${currentPage + 1})">Next ›</button>`;
 
-  // Calculate visible page range
-  function getPageRange(current, total, maxVisible) {
-    const half = Math.floor(maxVisible / 2);
-    let start = Math.max(1, current - half);
-    let end = Math.min(total, start + maxVisible - 1);
-    if (end - start < maxVisible - 1) start = Math.max(1, end - maxVisible + 1);
-    return [start, end];
-  }
-})();
+  container.innerHTML = html;
+}
+
+function gotoPage(p) {
+  currentPage = p;
+  loadSongs();
+  document.getElementById('browse-sinhala').scrollIntoView({behavior: 'smooth'});
+}
+
+function triggerFilterChange() {
+  currentGenre = document.getElementById('genre-select').value;
+  currentDecade = document.getElementById('decade-select').value;
+  currentSort = document.getElementById('sort-select').value;
+  currentPage = 1;
+  loadSongs();
+}
+
+function resetSearch() {
+  document.getElementById('song-search').value = '';
+  document.getElementById('genre-select').value = 'All';
+  document.getElementById('decade-select').value = 'All';
+  document.getElementById('sort-select').value = 'relevance';
+  currentSearch = '';
+  currentGenre = 'All';
+  currentDecade = 'All';
+  currentSort = 'relevance';
+  currentFilterType = 'all';
+  document.querySelectorAll('#quick-filters .genre-chip').forEach(b => b.classList.toggle('active', b.dataset.type === 'all'));
+  currentPage = 1;
+  loadSongs();
+}
+
+// Quick Filter Buttons
+document.querySelectorAll('#quick-filters .genre-chip').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#quick-filters .genre-chip').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentFilterType = btn.dataset.type;
+    currentPage = 1;
+    loadSongs();
+  });
+});
+
+// Setup Live Autocomplete Suggestions
+function setupSearchInput() {
+  const input = document.getElementById('song-search');
+  const box = document.getElementById('suggestions-box');
+  let debounceTimer;
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    const val = input.value.trim();
+    if (val.length < 2) {
+      box.style.display = 'none';
+      currentSearch = val;
+      currentPage = 1;
+      loadSongs();
+      return;
+    }
+
+    debounceTimer = setTimeout(async () => {
+      currentSearch = val;
+      currentPage = 1;
+      loadSongs();
+
+      try {
+        const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(val)}`);
+        const suggestions = await res.json();
+        if (suggestions.length) {
+          box.innerHTML = '';
+          suggestions.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'suggestion-item';
+            row.innerHTML = `<div><strong>${item.title}</strong><br><small>${item.artist}</small></div><span class="badge-classic">${item.genre}</span>`;
+            row.addEventListener('click', () => {
+              window.location.href = `lyrics/sinhala-song.html?song=${item.id}`;
+            });
+            box.appendChild(row);
+          });
+          box.style.display = 'block';
+        } else {
+          box.style.display = 'none';
+        }
+      } catch(e) { box.style.display = 'none'; }
+    }, 280);
+  });
+
+  // Hide suggestions when clicking outside
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.autocomplete-wrap')) {
+      box.style.display = 'none';
+    }
+  });
+}
 </script>
 
 </body>
