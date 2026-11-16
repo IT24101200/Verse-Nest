@@ -32,7 +32,7 @@ Open your browser at: **http://localhost:8000**
 
 * **Homepage:** [http://localhost:8000/](http://localhost:8000/)
 * **Sinhala Song Discovery:** [http://localhost:8000/sinhala.html](http://localhost:8000/sinhala.html)
-* **Admin Portal:** [http://localhost:8000/admin.html](http://localhost:8000/admin.html) *(Default: `admin` / `versenest2026`)*
+* **Admin Portal:** [http://localhost:8000/admin.html](http://localhost:8000/admin.html) *(Managed via `backend/manage_admin.py` and `.env`)*
 * **Dynamic SEO Sitemap:** [http://localhost:8000/sitemap.xml](http://localhost:8000/sitemap.xml)
 * **Interactive API Documentation:** [http://localhost:8000/docs](http://localhost:8000/docs)
 

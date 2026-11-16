@@ -23,6 +23,7 @@ from database import get_db_connection, init_db
 from deduplication import normalize_sinhala_text, normalize_english_text, evaluate_song_duplicate
 from search_engine import search_songs, get_search_suggestions
 from discovery import run_discovery_pipeline
+from security import verify_password, generate_session_token, verify_session_token, SECRET_KEY
 
 # Initialize database schema
 init_db()
@@ -42,46 +43,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-JWT_SECRET = os.environ.get("VERSENEST_SECRET_KEY", "versenest-super-secret-key-2026-production")
-ADMIN_USERNAME = os.environ.get("ADMIN_USER", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASS", "versenest2026")
-
-def generate_admin_token() -> str:
-    """Generates a simple signed HMAC admin bearer token valid for 24 hours."""
-    expiry = int(time.time()) + (24 * 3600)
-    msg = f"{ADMIN_USERNAME}:{expiry}"
-    sig = hmac.new(JWT_SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
-    return f"{msg}:{sig}"
+def generate_admin_token(username: str = "admin") -> str:
+    """Generates an HMAC-signed session bearer token with 8-hour expiration."""
+    return generate_session_token(username, duration_hours=8)
 
 def verify_admin_token(token: Optional[str]) -> bool:
-    """Verifies HMAC signature and token expiration."""
-    if not token:
-        return False
-    parts = token.split(":")
-    if len(parts) != 3:
-        return False
-    username, expiry_str, sig = parts
-    try:
-        expiry = int(expiry_str)
-        if time.time() > expiry:
-            return False
-        expected = hmac.new(JWT_SECRET.encode(), f"{username}:{expiry}".encode(), hashlib.sha256).hexdigest()
-        return hmac.compare_digest(sig, expected)
-    except Exception:
-        return False
+    """Verifies token signature and expiration."""
+    valid, _ = verify_session_token(token)
+    return valid
 
-def get_current_admin(request: Request):
+def get_current_admin(request: Request) -> str:
     """Dependency that ensures request has valid admin credentials."""
     auth_header = request.headers.get("Authorization", "")
     token = None
     if auth_header.startswith("Bearer "):
         token = auth_header[7:].strip()
-    if not verify_admin_token(token):
+    is_valid, username = verify_session_token(token)
+    if not is_valid or not username:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Admin authentication required. Please log in."
         )
-    return ADMIN_USERNAME
+    return username
 
 # Pydantic Request Models
 class LoginRequest(BaseModel):
@@ -170,11 +153,12 @@ def api_get_song_details(song_id: int):
         conn.close()
         raise HTTPException(status_code=404, detail="Song not found or not published.")
 
-    # Apply Lyrics Rights Management Rule
-    # Permitted lyrics states: 'original_owned', 'permission_granted', 'public_domain', 'licensed_attribution'
-    can_publish_lyrics = song["lyrics_status"] in (
-        "original_owned", "permission_granted", "public_domain", "licensed_attribution"
-    )
+    # Apply Strict Lyrics Rights Management Rule
+    # Permitted lyrics states: 'original_owned', 'permission_granted', or documented 'public_domain'/'licensed_attribution' with verifiable evidence
+    can_publish_lyrics = (
+        song["lyrics_status"] in ("original_owned", "permission_granted") or
+        (song["lyrics_status"] in ("public_domain", "licensed_attribution") and bool(song["lyrics_evidence"]))
+    ) and bool(song["lyrics"])
     published_lyrics = song["lyrics"] if can_publish_lyrics else None
     rights_notice = (
         "Full lyrics authorized for publication." if can_publish_lyrics
@@ -352,13 +336,20 @@ def api_submit_copyright_claim(claim: CopyrightClaimRequest):
 
 @app.post("/api/admin/login")
 def api_admin_login(cred: LoginRequest):
-    """Admin login returning secure signed token."""
-    if cred.username == ADMIN_USERNAME and cred.password == ADMIN_PASSWORD:
-        token = generate_admin_token()
+    """Admin login verifying secure PBKDF2 password hash from SQLite admin_users table."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, password_hash, role FROM admin_users WHERE username = ?;", (cred.username,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user and verify_password(cred.password, user["password_hash"]):
+        token = generate_session_token(user["username"], duration_hours=8)
         return {
             "status": "success",
             "token": token,
-            "username": ADMIN_USERNAME,
+            "username": user["username"],
+            "role": user["role"],
             "message": "Authentication successful"
         }
     raise HTTPException(status_code=401, detail="Invalid username or password.")

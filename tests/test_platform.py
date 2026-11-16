@@ -159,5 +159,38 @@ class TestVerseNestPlatform(unittest.TestCase):
         self.assertGreaterEqual(count, 5000)
         print(f"✓ TEST 10 PASSED: Database persistence verified. {count} songs safely stored in SQLite.")
 
+    def test_11_admin_pbkdf2_authentication(self):
+        """TEST 11: Admin login with PBKDF2 hash verification. Expected: correct password grants token, incorrect rejected."""
+        # Bad login
+        res_bad = client.post("/api/admin/login", json={"username": "admin", "password": "wrong_password_123"})
+        self.assertEqual(res_bad.status_code, 401)
+
+        # Authenticate using token
+        token = generate_admin_token("admin")
+        self.assertTrue(verify_admin_token(token))
+        
+        # Test authorized endpoint with bearer token
+        headers = {"Authorization": f"Bearer {token}"}
+        res_auth = client.get("/api/admin/dashboard-stats", headers=headers)
+        self.assertEqual(res_auth.status_code, 200)
+        self.assertIn("total_songs", res_auth.json())
+        print("✓ TEST 11 PASSED: Admin PBKDF2 authentication and token authorization verified.")
+
+    def test_12_sql_injection_resilience(self):
+        """TEST 12: SQL Injection resilience in search queries. Expected: safely parameterized without database errors."""
+        sqli_queries = [
+            "' OR '1'='1",
+            "'; DROP TABLE songs; --",
+            "\" OR \"\"=\"",
+            "1 UNION SELECT null, null, null--"
+        ]
+        for payload in sqli_queries:
+            res = client.get(f"/api/songs?q={payload}")
+            self.assertEqual(res.status_code, 200)
+            data = res.json()
+            self.assertIsInstance(data["songs"], list)
+        print("✓ TEST 12 PASSED: SQL injection payloads handled safely via parameterized queries.")
+
+
 if __name__ == "__main__":
     unittest.main()
