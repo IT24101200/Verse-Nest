@@ -4,56 +4,190 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0e18">
-  <meta name="description" content="VerseNest — Sri Lanka's largest Sinhala song &amp; lyrics discovery platform. Explore thousands of classic masterpieces, recent hits, songwriting guides, and verified metadata.">
+  <meta name="description" content="VerseNest — Sri Lanka's Sinhala song &amp; lyrics discovery platform. Explore verified classic masterpieces, recent hits, songwriting guides, and creative original lyrics.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="VerseNest Originals | Sinhala Music &amp; Lyrics Discovery Platform">
-  <meta property="og:description" content="Explore original song lyrics, emotional stories, and 5000+ Sinhala songs from old classics to latest releases.">
+  <meta property="og:description" content="Explore original song lyrics, emotional stories, and genuine Sinhala songs from old classics to latest releases.">
   <title>VerseNest Originals | Sinhala Songs &amp; Songwriting Platform</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    body { font-family: 'Noto Sans Sinhala', 'Inter', system-ui, sans-serif; }
-    .theme-light {
-      --bg: #f9f8fc;
-      --card-bg: #ffffff;
-      --text-main: #1d1b28;
-      --text-muted: #6b6678;
-      --border-color: rgba(0,0,0,0.12);
-      background: var(--bg) !important;
-      color: var(--text-main) !important;
+    /* Page specific overrides */
+    .artist-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-full);
+      padding: 8px 16px;
+      margin: 4px;
+      font-size: 13px;
+      text-decoration: none;
+      color: var(--text-primary);
+      transition: transform var(--transition-fast), border-color var(--transition-fast), background var(--transition-fast);
     }
-    .theme-light .site-header { background: rgba(255,255,255,0.92) !important; border-bottom: 1px solid rgba(0,0,0,0.1) !important; }
-    .theme-light .lyric-card, .theme-light .feature, .theme-light .guide { background: #ffffff !important; border-color: rgba(0,0,0,0.12) !important; }
-    .theme-light .section-alt { background: #f2edf8 !important; }
-    .theme-toggle-btn { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: inherit; border-radius: 99px; padding: 6px 14px; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
-    .artist-chip { display: inline-flex; align-items: center; gap: 8px; background: #191d2c; border: 1px solid rgba(255,255,255,0.15); border-radius: 100px; padding: 8px 16px; margin: 4px; font-size: 13px; text-decoration: none; color: #e4dfee; transition: transform .18s, border-color .18s; }
-    .artist-chip:hover { transform: translateY(-2px); border-color: #ffbcc0; color: #fff; }
-    .decade-badge { display: inline-block; padding: 12px 20px; background: #161b2c; border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; margin: 6px; text-decoration: none; color: #fff; font-weight: 600; text-align: center; min-width: 130px; }
-    .decade-badge:hover { border-color: #ffbcc0; background: #222940; }
+    .artist-chip:hover {
+      transform: translateY(-2px);
+      border-color: var(--accent-primary);
+      background: var(--bg-surface-hover);
+      color: var(--accent-primary);
+    }
+    .decade-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 20px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      margin: 4px;
+      text-decoration: none;
+      color: var(--text-primary);
+      font-weight: 600;
+      font-size: 14px;
+      transition: all var(--transition-fast);
+      flex: 1 1 150px;
+      max-width: 220px;
+      text-align: center;
+    }
+    .decade-badge:hover {
+      border-color: var(--accent-primary);
+      background: var(--bg-surface-hover);
+      transform: translateY(-2px);
+      color: var(--accent-primary);
+    }
+    .hero-search-box {
+      margin-top: 24px;
+      max-width: 580px;
+      min-width: 0;
+      width: 100%;
+      box-sizing: border-box;
+      display: flex;
+      gap: 8px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 6px 12px;
+      box-shadow: var(--shadow-md);
+      transition: border-color var(--transition-fast);
+    }
+    .hero-search-box:focus-within {
+      border-color: var(--accent-primary);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .hero-search-box input {
+      flex: 1;
+      min-width: 0;
+      background: transparent;
+      border: none;
+      outline: none;
+      color: var(--text-primary);
+      font-size: 15px;
+      padding: 6px 8px;
+    }
+    .hero-search-box input::placeholder {
+      color: var(--text-muted);
+    }
+    @media (max-width: 480px) {
+      .hero-search-box {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 8px 10px;
+        gap: 8px;
+        margin-top: 18px;
+      }
+      .hero-search-box svg {
+        display: none;
+      }
+      .hero-search-box input {
+        width: 100%;
+        font-size: 14px;
+        padding: 6px 4px;
+      }
+      .hero-search-box button {
+        width: 100% !important;
+        min-height: 40px !important;
+        padding: 8px 14px !important;
+        font-size: 13px !important;
+        justify-content: center !important;
+      }
+    }
+    .section-tab-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 12px;
+    }
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-weight: 600;
+      font-size: 15px;
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .tab-btn.active, .tab-btn:hover {
+      background: var(--bg-surface-elevated);
+      color: var(--accent-primary);
+    }
   </style>
 </head>
 <body>
 
+<!-- Skip Link for Accessibility -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- Site Header -->
 <header class="site-header">
   <div class="shell header-inner">
     <a class="brand" href="index.html" aria-label="VerseNest Originals home">
       <span class="brand-mark" aria-hidden="true">♫</span>
       <span>Verse<span> Nest</span></span>
     </a>
+    
     <nav class="nav" aria-label="Main navigation">
       <a href="#browse-originals">Originals</a>
-      <a href="sinhala.html" style="color:#efbacf;font-weight:700">සිංහල ගීත (5000+)</a>
+      <a href="sinhala.html" style="color:var(--accent-primary);font-weight:700">සිංහල ගීත (Library)</a>
       <a href="#browse-classics">Classics</a>
       <a href="#browse-decades">Eras</a>
       <a href="#guides">Guides</a>
       <a href="about.html">About</a>
-      <a class="nav-cta" href="sinhala.html">5000+ Songs Library</a>
-      <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme">🌓</button>
+      <a class="nav-cta" href="sinhala.html">Explore Library ↗</a>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle dark and light theme">
+        <span aria-hidden="true">🌓</span>
+        <span id="theme-btn-label">Theme</span>
+      </button>
     </nav>
+
+    <!-- Mobile Navigation Toggle -->
+    <button class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation drawer" aria-expanded="false" id="mobile-toggle-btn">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer" id="mobile-drawer" role="navigation" aria-label="Mobile navigation">
+    <a href="sinhala.html" style="color:var(--accent-primary);font-weight:700" onclick="toggleMobileNav()">🎵 Sinhala Song Library</a>
+    <a href="#browse-classics" onclick="toggleMobileNav()">★ Classic Masterpieces</a>
+    <a href="#browse-decades" onclick="toggleMobileNav()">📅 Eras &amp; Decades</a>
+    <a href="#browse-originals" onclick="toggleMobileNav()">✍️ Original Creative Lyrics</a>
+    <a href="#guides" onclick="toggleMobileNav()">📖 Songwriting Guides</a>
+    <a href="about.html" onclick="toggleMobileNav()">ℹ️ About VerseNest</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px">
+      <span style="font-size:14px;color:var(--text-secondary)">Theme Mode:</span>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme in mobile menu">
+        <span>🌓</span> Switch Mode
+      </button>
+    </div>
   </div>
 </header>
 
@@ -65,18 +199,30 @@
       <div>
         <span class="eyebrow">Sri Lanka's Modern Music Archive</span>
         <h1>Every feeling<br>has a <em>verse.</em></h1>
-        <p class="hero-copy">An independent collection celebrating original creative lyrics, emotional storytelling, and a comprehensive discovery archive of over 5,000 Sinhala songs from the golden era to the latest releases.</p>
+        <p class="hero-copy">An independent collection celebrating original creative lyrics, emotional storytelling, and a verified discovery archive of genuine Sinhala songs from the golden era to modern releases.</p>
+
+        <!-- Direct Instant Search Bar in Hero -->
+        <form class="hero-search-box" action="sinhala.html" method="GET" role="search" aria-label="Search Sinhala songs">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted);align-self:center;margin-left:4px" aria-hidden="true">
+            <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>
+          </svg>
+          <input type="search" name="q" placeholder="Search songs or singers (e.g. 'sanda', 'oba nisa', 'amaradeva')..." aria-label="Search songs or singers in Sinhala or English">
+          <button type="submit" class="btn btn-primary" style="padding:8px 16px;border-radius:var(--radius-sm);font-size:13px">Search</button>
+        </form>
+
         <div class="hero-actions">
-          <a class="btn btn-primary" href="sinhala.html">Browse 5000+ Sinhala Songs ↗</a>
+          <a class="btn btn-primary" href="sinhala.html">Browse Sinhala Song Library ↗</a>
           <a class="btn btn-secondary" href="#browse-originals">Explore Original Samples</a>
         </div>
+        
         <div class="stats">
-          <span><b id="live-stat-total">5000+</b> Verified Songs</span>
+          <span><b id="live-stat-sinhala">73</b> Sinhala Songs</span>
+          <span><b id="live-stat-originals">12</b> English Originals</span>
           <span><b>18</b> Genres &amp; Eras</span>
-          <span><b>03</b> Writing Guides</span>
-          <span><b>100%</b> Rights Verified</span>
+          <span><b>Rights-Aware</b> Lyrics Policy</span>
         </div>
       </div>
+
       <div class="hero-side" aria-label="Decorative vinyl record illustration">
         <div class="record" aria-hidden="true">
           <div class="record-inner">V / N</div>
@@ -89,19 +235,28 @@
     </div>
   </section>
 
-  <!-- Section: Featured Classics & Recent Hits Direct Feed -->
-  <section class="section section-alt" id="featured-sinhala-section">
+  <!-- Section: Featured Classics & Recent Releases -->
+  <section class="section section-alt" id="browse-classics">
     <div class="shell">
       <div class="section-top">
         <div>
           <span class="section-kicker">Live Catalogue Highlights</span>
           <h2>Featured Masterpieces &amp; New Releases</h2>
-          <div class="muted">Verified classics and trending releases from our persistent database.</div>
+          <div class="muted">Verified classics and modern releases from our persistent database.</div>
         </div>
-        <a href="sinhala.html" class="read-link" style="font-size:14px">View All 5000+ Songs →</a>
+        <a href="sinhala.html" class="read-link" style="font-size:14px">View All Songs →</a>
       </div>
+
+      <!-- Tab Buttons for Filtering Highlights -->
+      <div class="section-tab-bar" role="tablist">
+        <button class="tab-btn active" onclick="loadHighlights('popular')" id="tab-pop" role="tab">🔥 Most Popular</button>
+        <button class="tab-btn" onclick="loadHighlights('classics')" id="tab-cla" role="tab">★ Golden Classics</button>
+        <button class="tab-btn" onclick="loadHighlights('newest')" id="tab-new" role="tab">✨ Recent Releases</button>
+      </div>
+
       <div class="card-grid" id="featured-sinhala-grid">
-        <!-- Loaded dynamically from API -->
+        <!-- Loaded dynamically from API with modern SVG covers -->
+        <div class="empty" style="display:block">පූරණය වෙමින්... Loading catalogue highlights...</div>
       </div>
     </div>
   </section>
@@ -162,11 +317,17 @@
         <button type="button" class="chip" data-filter="Heartbreak">Heartbreak</button>
         <button type="button" class="chip" data-filter="Hope">Hope</button>
         <button type="button" class="chip" data-filter="Motivation">Motivation</button>
+        <button type="button" class="chip" data-filter="Nostalgia">Nostalgia</button>
       </div>
 
       <div class="card-grid" id="originals-grid">
         <a class="lyric-card" href="lyrics/the-last-train-home.html" data-mood="Hope">
-          <div class="art" style="--art-start:#6a3b81;--art-end:#332948"></div>
+          <div class="art" style="--art-start:#6a3b81;--art-end:#332948">
+            <div class="art-disc-badge" aria-hidden="true">♫</div>
+            <div class="art-waves" aria-hidden="true">
+              <span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span>
+            </div>
+          </div>
           <div class="card-body">
             <div class="card-meta">Hope · Indie Pop</div>
             <h3>The Last Train Home</h3>
@@ -174,8 +335,14 @@
             <span class="read-link">Read original lyrics →</span>
           </div>
         </a>
+
         <a class="lyric-card" href="lyrics/paper-planets.html" data-mood="Love">
-          <div class="art" style="--art-start:#a65d71;--art-end:#333453"></div>
+          <div class="art" style="--art-start:#a65d71;--art-end:#333453">
+            <div class="art-disc-badge" aria-hidden="true">♫</div>
+            <div class="art-waves" aria-hidden="true">
+              <span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span>
+            </div>
+          </div>
           <div class="card-body">
             <div class="card-meta">Love · Dream Pop</div>
             <h3>Paper Planets</h3>
@@ -183,8 +350,14 @@
             <span class="read-link">Read original lyrics →</span>
           </div>
         </a>
+
         <a class="lyric-card" href="lyrics/one-light-on.html" data-mood="Heartbreak">
-          <div class="art" style="--art-start:#345a80;--art-end:#2a2f54"></div>
+          <div class="art" style="--art-start:#345a80;--art-end:#2a2f54">
+            <div class="art-disc-badge" aria-hidden="true">♫</div>
+            <div class="art-waves" aria-hidden="true">
+              <span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span>
+            </div>
+          </div>
           <div class="card-body">
             <div class="card-meta">Heartbreak · Acoustic Folk</div>
             <h3>One Light On</h3>
@@ -192,8 +365,14 @@
             <span class="read-link">Read original lyrics →</span>
           </div>
         </a>
+
         <a class="lyric-card" href="lyrics/blueprints-for-tomorrow.html" data-mood="Motivation">
-          <div class="art" style="--art-start:#9b7252;--art-end:#453f69"></div>
+          <div class="art" style="--art-start:#9b7252;--art-end:#453f69">
+            <div class="art-disc-badge" aria-hidden="true">♫</div>
+            <div class="art-waves" aria-hidden="true">
+              <span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span>
+            </div>
+          </div>
           <div class="card-body">
             <div class="card-meta">Motivation · Alt Pop</div>
             <h3>Blueprints for Tomorrow</h3>
@@ -201,8 +380,14 @@
             <span class="read-link">Read original lyrics →</span>
           </div>
         </a>
+
         <a class="lyric-card" href="lyrics/small-town-satellites.html" data-mood="Nostalgia">
-          <div class="art" style="--art-start:#3e777f;--art-end:#2a305c"></div>
+          <div class="art" style="--art-start:#3e777f;--art-end:#2a305c">
+            <div class="art-disc-badge" aria-hidden="true">♫</div>
+            <div class="art-waves" aria-hidden="true">
+              <span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span>
+            </div>
+          </div>
           <div class="card-body">
             <div class="card-meta">Nostalgia · Indie Rock</div>
             <h3>Small Town Satellites</h3>
@@ -210,8 +395,14 @@
             <span class="read-link">Read original lyrics →</span>
           </div>
         </a>
+
         <a class="lyric-card" href="lyrics/after-the-rain.html" data-mood="Hope">
-          <div class="art" style="--art-start:#7060a6;--art-end:#39334d"></div>
+          <div class="art" style="--art-start:#7060a6;--art-end:#39334d">
+            <div class="art-disc-badge" aria-hidden="true">♫</div>
+            <div class="art-waves" aria-hidden="true">
+              <span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span><span class="art-wave-bar"></span>
+            </div>
+          </div>
           <div class="card-body">
             <div class="card-meta">Hope · Soft Pop</div>
             <h3>After the Rain</h3>
@@ -262,7 +453,7 @@
     <div class="footer-grid">
       <div>
         <a class="brand" href="index.html">
-          <span class="brand-mark">♫</span>
+          <span class="brand-mark" aria-hidden="true">♫</span>
           <span>Verse<span> Nest</span></span>
         </a>
         <p>A modern, educational discovery platform celebrating Sri Lankan music, poetry, and songwriting heritage. Built for performance, legal rights, and AdSense readiness.</p>
@@ -273,7 +464,7 @@
         <a href="copyright.html">Copyright &amp; Takedown</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
-        <a href="admin.html" style="color:#ffb8c5">Admin Portal</a>
+        <a href="admin.html" style="color:var(--accent-primary);font-weight:600">Admin Portal</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -284,30 +475,101 @@
 </footer>
 
 <script>
+// Theme Management
 function toggleTheme() {
-  document.body.classList.toggle('theme-light');
-  localStorage.setItem('versenest_theme', document.body.classList.contains('theme-light') ? 'light' : 'dark');
-}
-if (localStorage.getItem('versenest_theme') === 'light') {
-  document.body.classList.add('theme-light');
+  const isLight = document.body.classList.toggle('theme-light');
+  document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  localStorage.setItem('versenest_theme', isLight ? 'light' : 'dark');
+  updateThemeButton(isLight);
 }
 
-// Fetch dynamic homepage feed
-document.addEventListener('DOMContentLoaded', async () => {
+function updateThemeButton(isLight) {
+  const lbl = document.getElementById('theme-btn-label');
+  if (lbl) lbl.textContent = isLight ? 'Dark' : 'Light';
+}
+
+// Initial theme application
+(function initTheme() {
+  const saved = localStorage.getItem('versenest_theme');
+  if (saved === 'light') {
+    document.body.classList.add('theme-light');
+    document.documentElement.setAttribute('data-theme', 'light');
+    updateThemeButton(true);
+  } else {
+    document.body.classList.remove('theme-light');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    updateThemeButton(false);
+  }
+})();
+
+// Mobile Navigation Toggle
+function toggleMobileNav() {
+  const drawer = document.getElementById('mobile-drawer');
+  const btn = document.getElementById('mobile-toggle-btn');
+  const isOpen = drawer.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  btn.textContent = isOpen ? '✕' : '☰';
+}
+
+// Palettes for Generative Card Covers
+const COLOR_PALETTES = [
+  ['#6a3b81', '#332948'],
+  ['#a65d71', '#333453'],
+  ['#345a80', '#2a2f54'],
+  ['#9b7252', '#453f69'],
+  ['#3e777f', '#2a305c'],
+  ['#7060a6', '#39334d'],
+  ['#2b6b66', '#1a3b3a'],
+  ['#843b62', '#3e1f37']
+];
+
+// Load Highlights Section with Filter Tabs
+async function loadHighlights(mode) {
+  // Update Tab States
+  document.querySelectorAll('.section-tab-bar .tab-btn').forEach(b => b.classList.remove('active'));
+  if (mode === 'classics') document.getElementById('tab-cla')?.classList.add('active');
+  else if (mode === 'newest') document.getElementById('tab-new')?.classList.add('active');
+  else document.getElementById('tab-pop')?.classList.add('active');
+
+  const grid = document.getElementById('featured-sinhala-grid');
+  grid.innerHTML = '<div class="empty" style="display:block">පූරණය වෙමින්... Loading songs...</div>';
+
+  let endpoint = '/api/songs?page_size=6&language=si';
+  if (mode === 'classics') endpoint += '&is_classic=true';
+  else if (mode === 'newest') endpoint += '&is_recent=true&sort_by=newest';
+  else endpoint += '&sort_by=popular';
+
   try {
-    // 1. Fetch featured songs
-    const res = await fetch('/api/songs?page_size=6&sort_by=popular');
+    const res = await fetch(endpoint);
     const data = await res.json();
-    const grid = document.getElementById('featured-sinhala-grid');
     grid.innerHTML = '';
-    const colors = [['#6a3b81','#332948'], ['#a65d71','#333453'], ['#345a80','#2a2f54'], ['#9b7252','#453f69'], ['#3e777f','#2a305c'], ['#7060a6','#39334d']];
+    
+    if (!data.songs || data.songs.length === 0) {
+      grid.innerHTML = '<div class="empty" style="display:block">No songs found in this category.</div>';
+      return;
+    }
+
     data.songs.forEach((s, i) => {
-      const c = colors[i % colors.length];
+      const c = COLOR_PALETTES[i % COLOR_PALETTES.length];
+      const badge = s.is_classic ? '<span style="color:var(--accent-primary);font-weight:700">★ Classic</span>' :
+                    s.is_recent ? '<span style="color:var(--accent-warm);font-weight:700">🔥 Recent</span>' : '';
       grid.innerHTML += `
         <a class="lyric-card" href="lyrics/sinhala-song.html?song=${s.id}">
-          <div class="art" style="--art-start:${c[0]};--art-end:${c[1]}"></div>
+          <div class="art" style="--art-start:${c[0]};--art-end:${c[1]}">
+            <div class="art-disc-badge" aria-hidden="true">♫</div>
+            <div class="art-waves" aria-hidden="true">
+              <span class="art-wave-bar"></span>
+              <span class="art-wave-bar"></span>
+              <span class="art-wave-bar"></span>
+              <span class="art-wave-bar"></span>
+              <span class="art-wave-bar"></span>
+            </div>
+          </div>
           <div class="card-body">
-            <div class="card-meta">Sinhala · ${s.genre}</div>
+            <div class="card-meta">
+              <span>${s.genre || 'Sinhala'}</span>
+              ${badge ? `<span>·</span> ${badge}` : ''}
+            </div>
             <h3>${s.title_si}</h3>
             <p>${s.title_en} — ${s.artist}</p>
             <span class="read-link">Read details &amp; listen →</span>
@@ -315,22 +577,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         </a>
       `;
     });
+  } catch(e) {
+    console.error('Failed to load highlights:', e);
+    grid.innerHTML = '<div class="empty" style="display:block">Unable to load songs right now. Please try again.</div>';
+  }
+}
 
-    // 2. Fetch Trending Artists
-    const aRes = await fetch('/api/artists/trending?limit=14');
+// Initial Data Loading
+document.addEventListener('DOMContentLoaded', async () => {
+  // 1. Initial Highlights (Popular)
+  loadHighlights('popular');
+
+  // 2. Fetch Trending Artists (Sinhala)
+  try {
+    const aRes = await fetch('/api/artists/trending?limit=14&language=si');
     const artists = await aRes.json();
     const container = document.getElementById('artists-chips-container');
     container.innerHTML = '';
     artists.forEach(a => {
-      container.innerHTML += `<a href="sinhala.html?artist=${encodeURIComponent(a.artist)}" class="artist-chip">🎙️ ${a.artist} <small style="color:#aaa">(${a.song_count})</small></a>`;
+      container.innerHTML += `<a href="sinhala.html?artist=${encodeURIComponent(a.artist)}" class="artist-chip">🎙️ ${a.artist} <small style="color:var(--text-muted)">(${a.song_count})</small></a>`;
     });
+  } catch(e) {
+    console.error('Artists fetch error:', e);
+  }
 
-    // 3. Stats
+  // 3. Stats (Separating Sinhala Catalogue from English Originals)
+  try {
     const sRes = await fetch('/api/stats');
     const stats = await sRes.json();
-    document.getElementById('live-stat-total').textContent = stats.total_songs.toLocaleString();
+    const siEl = document.getElementById('live-stat-sinhala');
+    const enEl = document.getElementById('live-stat-originals');
+    if (siEl) siEl.textContent = (stats.sinhala_songs || 73).toLocaleString();
+    if (enEl) enEl.textContent = (stats.english_originals || 12).toLocaleString();
   } catch(e) {
-    console.error('Homepage feed fetch error:', e);
+    console.error('Stats fetch error:', e);
   }
 });
 

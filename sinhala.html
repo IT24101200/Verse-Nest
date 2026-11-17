@@ -4,62 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#0b0e18">
-  <meta name="description" content="Explore Sri Lanka's largest Sinhala song catalogue. From timeless classics by Amaradeva and Milton to the latest 2024 releases. Full search in Sinhala and English.">
+  <meta name="description" content="Explore Sri Lanka's Sinhala song catalogue. From timeless classics by Amaradeva and Milton to modern releases. Full search in Sinhala and English.">
   <meta property="og:type" content="website">
   <meta property="og:title" content="VerseNest — Sinhala Song &amp; Lyrics Discovery Platform">
-  <meta property="og:description" content="Search thousands of Sinhala songs by title, singer, lyricist, genre, and decade with English transliteration support.">
+  <meta property="og:description" content="Search genuine Sinhala songs by title, singer, lyricist, genre, and decade with English transliteration support.">
   <title>සිංහල ගීත එකතුව | Sinhala Song Discovery | VerseNest</title>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="assets/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    :root {
-      --font-sinhala: 'Noto Sans Sinhala', 'Inter', system-ui, sans-serif;
-    }
-    body {
-      font-family: var(--font-sinhala);
-    }
-    .theme-light {
-      --bg: #f9f8fc;
-      --card-bg: #ffffff;
-      --text-main: #1d1b28;
-      --text-muted: #6b6678;
-      --border-color: rgba(0,0,0,0.12);
-      background: var(--bg) !important;
-      color: var(--text-main) !important;
-    }
-    .theme-light .site-header {
-      background: rgba(255,255,255,0.92) !important;
-      border-bottom: 1px solid rgba(0,0,0,0.1) !important;
-    }
-    .theme-light .lyric-card, .theme-light .feature, .theme-light .stat-card {
-      background: #ffffff !important;
-      border-color: rgba(0,0,0,0.12) !important;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-    }
-    .theme-light .search-wrap {
-      background: #ffffff !important;
-      border-color: rgba(0,0,0,0.2) !important;
-    }
-    .theme-light .search-wrap input {
-      color: #111 !important;
-    }
-    .theme-toggle-btn {
-      background: transparent;
-      border: 1px solid rgba(255,255,255,0.2);
-      color: inherit;
-      border-radius: 99px;
-      padding: 6px 14px;
-      font-size: 13px;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-    }
-    /* Suggestions Dropdown */
+    /* Autocomplete Suggestions Box */
     .autocomplete-wrap {
       position: relative;
       flex: 1;
@@ -69,60 +26,263 @@
       top: 100%;
       left: 0;
       right: 0;
-      background: #181d2e;
-      border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 12px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-highlight);
+      border-radius: var(--radius-md);
       margin-top: 6px;
       max-height: 320px;
       overflow-y: auto;
       z-index: 50;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.5);
+      box-shadow: var(--shadow-lg);
       display: none;
     }
     .suggestion-item {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(255,255,255,0.06);
+      padding: 12px 18px;
+      border-bottom: 1px solid var(--border-subtle);
       cursor: pointer;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      transition: background var(--transition-fast);
     }
-    .suggestion-item:hover {
-      background: rgba(255,255,255,0.08);
+    .suggestion-item:hover, .suggestion-item.selected {
+      background: var(--bg-surface-hover);
     }
-    .suggestion-item strong { color: #ffb8c5; font-size: 14px; }
-    .suggestion-item small { color: #a49cb5; font-size: 12px; }
-    /* Control filters bar */
+    .suggestion-item strong {
+      color: var(--accent-primary);
+      font-size: 14px;
+    }
+    .suggestion-item small {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+
+    /* Controls Bar & Dropdowns */
     .controls-bar {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       justify-content: space-between;
       align-items: center;
-      margin: 20px 0;
+      margin: 18px 0 24px;
+      padding: 12px 18px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
     }
     .select-dropdown {
-      background: #191d2c;
-      border: 1px solid rgba(255,255,255,0.2);
-      color: #f2edf8;
-      border-radius: 8px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      color: var(--text-primary);
+      border-radius: var(--radius-sm);
       padding: 8px 14px;
       font-size: 13px;
       font-family: inherit;
       outline: none;
+      cursor: pointer;
+      transition: border-color var(--transition-fast);
     }
-    .pagination { display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-top:36px; }
-    .pagination button { min-width:40px; height:40px; border:1px solid #ffffff26; background:transparent; color:#c6c0d0; border-radius:8px; font-size:14px; font-weight:700; cursor:pointer; }
-    .pagination button.active { background:#efbacf; color:#281527; border-color:#efbacf; }
-    .pagination button:hover:not(.active) { background:#ffffff15; }
-    .pagination button:disabled { opacity:.4; cursor:default; }
-    .badge-classic { background: rgba(255,182,193,0.18); color: #ffb1bf; border: 1px solid #ffb1bf; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
-    .badge-recent { background: rgba(255,158,125,0.18); color: #ff9e7d; border: 1px solid #ff9e7d; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 700; }
+    .select-dropdown:focus {
+      border-color: var(--accent-primary);
+    }
+    
+    /* Pagination Styles */
+    .pagination {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 36px;
+    }
+    .pagination button {
+      min-width: 40px;
+      height: 40px;
+      border: 1px solid var(--border-default);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .pagination button.active {
+      background: var(--accent-primary);
+      color: var(--text-inverse);
+      border-color: var(--accent-primary);
+    }
+    .pagination button:hover:not(.active):not(:disabled) {
+      background: var(--bg-surface-hover);
+      border-color: var(--accent-primary);
+      color: var(--accent-primary);
+    }
+    .pagination button:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    /* Badges */
+    .badge-classic {
+      background: rgba(255, 184, 197, 0.15);
+      color: var(--accent-primary);
+      border: 1px solid var(--accent-primary);
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .badge-recent {
+      background: rgba(255, 158, 125, 0.15);
+      color: var(--accent-warm);
+      border: 1px solid var(--accent-warm);
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    /* Quick Filter Chips */
+    .genre-filters {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 10px 0 16px;
+    }
+    .genre-chip {
+      border-radius: var(--radius-full);
+      border: 1px solid var(--border-default);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+    .genre-chip.active, .genre-chip:hover {
+      background: var(--accent-primary);
+      color: var(--text-inverse);
+      border-color: var(--accent-primary);
+    }
+
+    /* Mobile Compact Layout & Filters */
+    .mobile-filters-drawer {
+      width: 100%;
+    }
+    .mobile-filters-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      list-style: none;
+      user-select: none;
+      transition: background var(--transition-fast);
+    }
+    .mobile-filters-summary::-webkit-details-marker {
+      display: none;
+    }
+    .mobile-filters-summary:hover {
+      background: var(--bg-surface-hover);
+    }
+    .mobile-filters-dropdowns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+    }
+    .mobile-search-status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin: 8px 0 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .result-pill {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-primary);
+      background: rgba(255, 184, 197, 0.12);
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(255, 184, 197, 0.25);
+    }
+
+    @media (min-width: 769px) {
+      .mobile-filters-summary {
+        display: none !important;
+      }
+      .mobile-filters-dropdowns {
+        display: flex !important;
+        margin-top: 0;
+      }
+      .mobile-filters-drawer {
+        display: block;
+      }
+      #desktop-count-wrap {
+        display: flex !important;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .page-hero {
+        padding: 16px 0 8px !important;
+      }
+      .page-heading h1 {
+        font-size: 22px !important;
+        line-height: 1.25 !important;
+        margin-bottom: 6px !important;
+      }
+      .page-heading p {
+        font-size: 13px !important;
+        line-height: 1.4 !important;
+        margin-bottom: 10px !important;
+      }
+      .controls-bar {
+        padding: 10px 12px;
+        margin: 8px 0 14px;
+      }
+      .select-dropdown {
+        width: 100%;
+        font-size: 13px;
+      }
+      .genre-filters {
+        margin: 6px 0 10px;
+      }
+      .genre-chip {
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      /* Compact mode when searching or query present */
+      body.has-search-active .page-heading p,
+      body.has-search-active .page-hero .breadcrumbs {
+        display: none;
+      }
+      body.has-search-active .page-hero {
+        padding: 8px 0 4px !important;
+      }
+      body.has-search-active .page-heading h1 {
+        font-size: 18px !important;
+      }
+    }
   </style>
 </head>
 <body>
 
-<!-- Header -->
+<!-- Skip Link for Accessibility -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
+
+<!-- Site Header -->
 <header class="site-header">
   <div class="shell header-inner">
     <a class="brand" href="index.html" aria-label="VerseNest Originals home">
@@ -130,14 +290,38 @@
       <span>Verse<span> Nest</span></span>
     </a>
     <nav class="nav" aria-label="Main navigation">
-      <a href="index.html#browse">English</a>
-      <a href="sinhala.html" style="color:#efbacf;font-weight:700">සිංහල ගීත</a>
-      <a href="index.html#guides">Guides</a>
+      <a href="index.html#browse-originals">English Originals</a>
+      <a href="sinhala.html" class="active" style="color:var(--accent-primary);font-weight:700">සිංහල ගීත (Library)</a>
+      <a href="index.html#browse-classics">Classics</a>
+      <a href="index.html#guides">Writing Guides</a>
       <a href="about.html">About</a>
       <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark and light theme">
-        <span>🌓</span> Theme
+        <span aria-hidden="true">🌓</span>
+        <span id="theme-btn-label">Theme</span>
       </button>
     </nav>
+
+    <!-- Mobile Navigation Toggle -->
+    <button class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation drawer" aria-expanded="false" id="mobile-toggle-btn">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer" id="mobile-drawer" role="navigation" aria-label="Mobile navigation">
+    <a href="index.html" onclick="toggleMobileNav()">🏠 Home</a>
+    <a href="sinhala.html" style="color:var(--accent-primary);font-weight:700" onclick="toggleMobileNav()">🎵 Sinhala Song Library</a>
+    <a href="index.html#browse-classics" onclick="toggleMobileNav()">★ Classic Masterpieces</a>
+    <a href="index.html#browse-decades" onclick="toggleMobileNav()">📅 Eras &amp; Decades</a>
+    <a href="index.html#browse-originals" onclick="toggleMobileNav()">✍️ English Originals</a>
+    <a href="index.html#guides" onclick="toggleMobileNav()">📖 Songwriting Guides</a>
+    <a href="about.html" onclick="toggleMobileNav()">ℹ️ About VerseNest</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px">
+      <span style="font-size:14px;color:var(--text-secondary)">Theme Mode:</span>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme in mobile menu">
+        <span>🌓</span> Switch Mode
+      </button>
+    </div>
   </div>
 </header>
 
@@ -147,64 +331,86 @@
   <section class="page-hero">
     <div class="shell">
       <div class="breadcrumbs">
-        <a href="index.html">Home</a><span>/</span><span>සිංහල ගීත එකතුව / Sinhala Song Library</span>
+        <a href="index.html">Home</a>
+        <span>/</span>
+        <span>සිංහල ගීත එකතුව / Sinhala Song Library</span>
       </div>
       <div class="page-heading">
         <span class="eyebrow">සම්පූර්ණ සිංහල ගීතාවලිය · Sinhala Music Archive</span>
         <h1>සිංහල ගීත පද හා තොරතුරු<br>Sinhala Song &amp; Lyrics Discovery</h1>
-        <p>Explore Sri Lanka's largest practical catalogue of <span id="stat-total-badge" style="background:#ffb8c522;color:#ffb8c5;padding:3px 10px;border-radius:20px;font-weight:700">5000+ Verified Songs</span>. Search by title in Sinhala or English, singer, lyricist, era, or genre.</p>
+        <p>Explore Sri Lanka's verified catalogue of <span id="stat-total-badge" style="background:var(--accent-glow);color:var(--accent-primary);padding:3px 12px;border-radius:20px;font-weight:700;display:inline-block">73 Verified Sinhala Songs</span>. Search by song title in Sinhala or English, singer, lyricist, era, or musical genre.</p>
       </div>
     </div>
   </section>
 
   <!-- Browse & Search Section -->
-  <section class="section" id="browse-sinhala">
+  <section class="section" id="browse-sinhala" style="padding-top:16px">
     <div class="shell">
 
       <!-- Search Row with Transliteration & Suggestions -->
       <div class="search-row">
         <div class="autocomplete-wrap">
           <label class="search-wrap" style="width:100%">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d5bccd" stroke-width="2" aria-hidden="true">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="color:var(--text-muted)" aria-hidden="true">
               <circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/>
             </svg>
             <span class="visually-hidden">Search Sinhala songs</span>
             <input id="song-search" type="search" autocomplete="off" placeholder="ගීතයේ නම හෝ ගායකයා සොයන්න (Type in Sinhala or English, e.g. 'sanda', 'oba nisa', 'amaradeva')...">
           </label>
-          <div class="suggestions-box" id="suggestions-box"></div>
+          <div class="suggestions-box" id="suggestions-box" role="listbox" aria-label="Search suggestions"></div>
         </div>
       </div>
 
-      <!-- Quick Quick-Filter Chips -->
-      <div class="genre-filters" id="quick-filters">
-        <button type="button" class="genre-chip active" data-type="all">සියලුම ගීත (All)</button>
-        <button type="button" class="genre-chip" data-type="recent" style="border-color:#ff9e7d;color:#ff9e7d;font-weight:700">🔥 Recent Hits (නව ගීත)</button>
-        <button type="button" class="genre-chip" data-type="classic" style="border-color:#ffb1bf;color:#ffb1bf;font-weight:700">★ Old Classics (සම්භාව්‍ය)</button>
+      <!-- Quick Mobile Status & Live Count Bar -->
+      <div class="mobile-search-status-bar">
+        <span id="result-pill" class="result-pill">73 Sinhala Songs</span>
+        <button type="button" class="btn btn-secondary" style="padding:4px 10px;font-size:11px" onclick="resetSearch()">Clear Filters</button>
       </div>
 
-      <!-- Controls & Dropdowns Bar -->
+      <!-- Quick-Filter Chips -->
+      <div class="genre-filters" id="quick-filters" role="group" aria-label="Quick category filters">
+        <button type="button" class="genre-chip active" data-type="all">සියලුම ගීත (All 73)</button>
+        <button type="button" class="genre-chip" data-type="recent" style="border-color:var(--accent-warm);color:var(--accent-warm);font-weight:700">🔥 Recent Hits (නව ගීත)</button>
+        <button type="button" class="genre-chip" data-type="classic" style="border-color:var(--accent-primary);color:var(--accent-primary);font-weight:700">★ Old Classics (සම්භාව්‍ය)</button>
+      </div>
+
+      <!-- Controls & Dropdowns Bar with Responsive Collapsible Drawer -->
       <div class="controls-bar">
-        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
-          <select id="genre-select" class="select-dropdown" onchange="triggerFilterChange()">
-            <option value="All">All Genres / ශෛලීන්</option>
-          </select>
-          <select id="decade-select" class="select-dropdown" onchange="triggerFilterChange()">
-            <option value="All">All Eras / දශක</option>
-          </select>
-          <select id="sort-select" class="select-dropdown" onchange="triggerFilterChange()">
-            <option value="relevance">Sort: Most Relevant</option>
-            <option value="popular">Sort: Most Popular</option>
-            <option value="newest">Sort: Recently Added</option>
-            <option value="title">Sort: Title (A-Z / අ-ෆ)</option>
-          </select>
-        </div>
-        <div style="font-size:13px;color:#a8a3b5">
-          <span id="result-count">Loading songs...</span>
+        <details class="mobile-filters-drawer" id="mobile-filters-drawer">
+          <summary class="mobile-filters-summary">
+            <span>⚙️ Filters &amp; Sorting (<span id="filter-summary-label">All Genres · All Eras</span>)</span>
+            <span aria-hidden="true">▾</span>
+          </summary>
+          <div class="mobile-filters-dropdowns">
+            <label class="visually-hidden" for="genre-select">Filter by genre</label>
+            <select id="genre-select" class="select-dropdown" onchange="triggerFilterChange()">
+              <option value="All">All Genres / ශෛලීන්</option>
+            </select>
+
+            <label class="visually-hidden" for="decade-select">Filter by decade</label>
+            <select id="decade-select" class="select-dropdown" onchange="triggerFilterChange()">
+              <option value="All">All Eras / දශක</option>
+            </select>
+
+            <label class="visually-hidden" for="sort-select">Sort songs</label>
+            <select id="sort-select" class="select-dropdown" onchange="triggerFilterChange()">
+              <option value="relevance">Sort: Most Relevant</option>
+              <option value="popular">Sort: Most Popular</option>
+              <option value="newest">Sort: Recently Added</option>
+              <option value="title">Sort: Title (A-Z / අ-ෆ)</option>
+            </select>
+          </div>
+        </details>
+
+        <div style="font-size:13px;color:var(--text-muted);display:none;align-items:center;gap:10px" id="desktop-count-wrap">
+          <span id="result-count">Loading catalogue...</span>
         </div>
       </div>
 
       <!-- Song Grid -->
-      <div class="card-grid" id="song-grid"></div>
+      <div class="card-grid" id="song-grid">
+        <!-- Rendered dynamically -->
+      </div>
 
       <!-- Empty State -->
       <div class="empty" id="empty-state" role="status" style="display:none;padding:50px 20px;text-align:center">
@@ -214,16 +420,16 @@
       </div>
 
       <!-- Pagination Controls -->
-      <div class="pagination" id="pagination"></div>
+      <div class="pagination" id="pagination" aria-label="Pagination"></div>
 
       <!-- Featured Artists & Cultural Biographies Section -->
-      <section style="margin-top:60px;padding-top:40px;border-top:1px solid rgba(255,255,255,0.1)">
+      <section style="margin-top:60px;padding-top:40px;border-top:1px solid var(--border-subtle)">
         <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:10px">
           <div>
             <span class="eyebrow">Verified Artists &amp; Legends</span>
-            <h2 style="margin:4px 0 0;font-size:24px;font-family:Georgia,serif">ශ්‍රී ලාංකේය සංගීත ප්‍රවීණයෝ</h2>
+            <h2 style="margin:4px 0 0;font-size:24px">ශ්‍රී ලාංකේය සංගීත ප්‍රවීණයෝ</h2>
           </div>
-          <span style="font-size:13px;color:#a8a3b5">Verified historical facts, active eras &amp; cultural impact</span>
+          <span style="font-size:13px;color:var(--text-muted)">Verified historical facts, active eras &amp; cultural impact</span>
         </div>
         <div class="card-grid" id="artists-grid" style="grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px"></div>
       </section>
@@ -250,7 +456,7 @@
         <a href="copyright.html">Copyright &amp; Takedown</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
-        <a href="admin.html" style="color:#ffb8c5">Admin Portal</a>
+        <a href="admin.html" style="color:var(--accent-primary);font-weight:600">Admin Portal</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -269,16 +475,16 @@ let currentGenre = 'All';
 let currentDecade = 'All';
 let currentSort = 'relevance';
 
-const colors = [
-  ['#6a3b81','#332948'], ['#a65d71','#333453'], ['#345a80','#2a2f54'],
-  ['#9b7252','#453f69'], ['#3e777f','#2a305c'], ['#7060a6','#39334d'],
-  ['#8b5e3c','#3d2b4f'], ['#5a7a3e','#2d3b28'], ['#7a3b5e','#3b2848'],
-  ['#3b6a81','#283249']
+const COLOR_PALETTES = [
+  ['#6a3b81', '#332948'], ['#a65d71', '#333453'], ['#345a80', '#2a2f54'],
+  ['#9b7252', '#453f69'], ['#3e777f', '#2a305c'], ['#7060a6', '#39334d'],
+  ['#2b6b66', '#1a3b3a'], ['#843b62', '#3e1f37']
 ];
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
   initTheme();
+  parseUrlParameters();
   loadFilterDropdowns();
   loadSongs();
   loadFeaturedArtists();
@@ -286,54 +492,123 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initTheme() {
-  const saved = localStorage.getItem('versenest_theme') || 'dark';
-  if (saved === 'light') document.body.classList.add('theme-light');
+  const saved = localStorage.getItem('versenest_theme');
+  if (saved === 'light') {
+    document.body.classList.add('theme-light');
+    document.documentElement.setAttribute('data-theme', 'light');
+    updateThemeButton(true);
+  } else {
+    document.body.classList.remove('theme-light');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    updateThemeButton(false);
+  }
 }
 
 function toggleTheme() {
-  document.body.classList.toggle('theme-light');
-  const isLight = document.body.classList.contains('theme-light');
+  const isLight = document.body.classList.toggle('theme-light');
+  document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
   localStorage.setItem('versenest_theme', isLight ? 'light' : 'dark');
+  updateThemeButton(isLight);
+}
+
+function updateThemeButton(isLight) {
+  const lbl = document.getElementById('theme-btn-label');
+  if (lbl) lbl.textContent = isLight ? 'Dark' : 'Light';
+}
+
+function toggleMobileNav() {
+  const drawer = document.getElementById('mobile-drawer');
+  const btn = document.getElementById('mobile-toggle-btn');
+  const isOpen = drawer.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  btn.textContent = isOpen ? '✕' : '☰';
+}
+
+// Parse URL Parameters (e.g. from homepage search or era clicks)
+function parseUrlParameters() {
+  const params = new URLSearchParams(window.location.search);
+  const q = params.get('q');
+  const artist = params.get('artist');
+  const decade = params.get('decade');
+  const genre = params.get('genre');
+
+  if (q) {
+    currentSearch = q;
+    document.body.classList.add('has-search-active');
+    const input = document.getElementById('song-search');
+    if (input) input.value = q;
+  }
+  if (artist) {
+    currentSearch = artist;
+    document.body.classList.add('has-search-active');
+    const input = document.getElementById('song-search');
+    if (input) input.value = artist;
+  }
+  if (decade) {
+    currentDecade = decade;
+  }
+  if (genre) {
+    currentGenre = genre;
+  }
 }
 
 async function loadFilterDropdowns() {
   try {
-    // Genres
-    const gRes = await fetch('/api/genres');
+    // Genres (Sinhala only)
+    const gRes = await fetch('/api/genres?language=si');
     const genres = await gRes.json();
     const gSelect = document.getElementById('genre-select');
     genres.forEach(g => {
       const opt = document.createElement('option');
       opt.value = g.genre;
       opt.textContent = `${g.genre} (${g.count})`;
+      if (currentGenre === g.genre) opt.selected = true;
       gSelect.appendChild(opt);
     });
 
-    // Decades
-    const dRes = await fetch('/api/decades');
+    // Decades (Sinhala only)
+    const dRes = await fetch('/api/decades?language=si');
     const decades = await dRes.json();
     const dSelect = document.getElementById('decade-select');
     decades.forEach(d => {
       const opt = document.createElement('option');
       opt.value = d.decade;
       opt.textContent = `${d.decade} (${d.count})`;
+      if (currentDecade === d.decade) opt.selected = true;
       dSelect.appendChild(opt);
     });
 
-    // Platform stats
+    // Platform stats (Sinhala Songs count)
     const stRes = await fetch('/api/stats');
     const stats = await stRes.json();
-    document.getElementById('stat-total-badge').textContent = `${stats.total_songs.toLocaleString()} Verified Songs`;
+    const totalSi = stats.sinhala_songs || 73;
+    const badge = document.getElementById('stat-total-badge');
+    if (badge) badge.textContent = `${totalSi.toLocaleString()} Verified Sinhala Songs`;
   } catch(e) { console.error('Filter dropdown load error:', e); }
 }
 
 async function loadSongs() {
   const grid = document.getElementById('song-grid');
   const resultCount = document.getElementById('result-count');
+  const resultPill = document.getElementById('result-pill');
   const emptyState = document.getElementById('empty-state');
-  resultCount.textContent = 'Loading songs...';
+  if (resultCount) resultCount.textContent = 'Loading catalogue...';
+  if (resultPill) resultPill.textContent = 'Searching...';
 
-  let url = `/api/songs?page=${currentPage}&page_size=24&sort_by=${currentSort}`;
+  // Manage compact active search state
+  if (currentSearch && currentSearch.trim().length > 0) {
+    document.body.classList.add('has-search-active');
+  } else if (!window.location.search.includes('q=')) {
+    document.body.classList.remove('has-search-active');
+  }
+
+  // Update filter summary indicator
+  const summaryLabel = document.getElementById('filter-summary-label');
+  if (summaryLabel) {
+    summaryLabel.textContent = `${currentGenre === 'All' ? 'All Genres' : currentGenre} · ${currentDecade === 'All' ? 'All Eras' : currentDecade}`;
+  }
+
+  let url = `/api/songs?page=${currentPage}&page_size=24&sort_by=${currentSort}&language=si`;
   if (currentSearch) url += `&q=${encodeURIComponent(currentSearch)}`;
   if (currentGenre !== 'All') url += `&genre=${encodeURIComponent(currentGenre)}`;
   if (currentDecade !== 'All') url += `&decade=${encodeURIComponent(currentDecade)}`;
@@ -344,7 +619,9 @@ async function loadSongs() {
     const res = await fetch(url);
     const data = await res.json();
 
-    resultCount.textContent = `${data.total_count.toLocaleString()} songs found · Page ${data.page} of ${data.total_pages || 1}`;
+    const countText = `${data.total_count.toLocaleString()} songs found · Page ${data.page} of ${data.total_pages || 1}`;
+    if (resultCount) resultCount.textContent = countText;
+    if (resultPill) resultPill.textContent = `${data.total_count.toLocaleString()} Songs Found`;
     
     if (!data.songs.length) {
       grid.innerHTML = '';
@@ -356,16 +633,28 @@ async function loadSongs() {
     emptyState.style.display = 'none';
     let html = '';
     data.songs.forEach((s, idx) => {
-      const c = colors[idx % colors.length];
+      const c = COLOR_PALETTES[idx % COLOR_PALETTES.length];
       let badge = '';
       if (s.is_recent) badge = ' <span class="badge-recent">🔥 Recent</span>';
       else if (s.is_classic) badge = ' <span class="badge-classic">★ Classic</span>';
 
       html += `
         <a class="lyric-card" href="lyrics/sinhala-song.html?song=${s.id}">
-          <div class="art" style="--art-start:${c[0]};--art-end:${c[1]}" aria-hidden="true"></div>
+          <div class="art" style="--art-start:${c[0]};--art-end:${c[1]}" aria-hidden="true">
+            <div class="art-disc-badge">♫</div>
+            <div class="art-waves">
+              <span class="art-wave-bar"></span>
+              <span class="art-wave-bar"></span>
+              <span class="art-wave-bar"></span>
+              <span class="art-wave-bar"></span>
+              <span class="art-wave-bar"></span>
+            </div>
+          </div>
           <div class="card-body">
-            <div class="card-meta">Sinhala · ${s.genre}${badge}</div>
+            <div class="card-meta">
+              <span>${s.genre || 'Sinhala'}</span>
+              ${badge ? `<span>·</span> ${badge}` : ''}
+            </div>
             <h3>${s.title_si}</h3>
             <p>${s.title_en} — ${s.artist}${s.lyricist ? ' (පද: ' + s.lyricist + ')' : ''}</p>
             <span class="read-link">Explore song &amp; details →</span>
@@ -377,7 +666,8 @@ async function loadSongs() {
     renderPagination(data.total_pages);
   } catch(e) {
     console.error('Error fetching songs:', e);
-    resultCount.textContent = 'Error connecting to database.';
+    if (resultCount) resultCount.textContent = 'Error connecting to database.';
+    if (resultPill) resultPill.textContent = 'Error';
   }
 }
 
@@ -385,16 +675,16 @@ function renderPagination(totalPages) {
   const container = document.getElementById('pagination');
   if (totalPages <= 1) { container.innerHTML = ''; return; }
 
-  let html = `<button ${currentPage === 1 ? 'disabled' : ''} onclick="gotoPage(${currentPage - 1})">‹ Prev</button>`;
-  let start = Math.max(1, currentPage - 3);
-  let end = Math.min(totalPages, currentPage + 3);
+  let html = `<button ${currentPage === 1 ? 'disabled' : ''} onclick="gotoPage(${currentPage - 1})" aria-label="Previous page">‹ Prev</button>`;
+  let start = Math.max(1, currentPage - 2);
+  let end = Math.min(totalPages, currentPage + 2);
 
   if (start > 1) html += `<button onclick="gotoPage(1)">1</button>${start > 2 ? '<button disabled>…</button>' : ''}`;
   for (let p = start; p <= end; p++) {
-    html += `<button class="${p === currentPage ? 'active' : ''}" onclick="gotoPage(${p})">${p}</button>`;
+    html += `<button class="${p === currentPage ? 'active' : ''}" onclick="gotoPage(${p})" aria-label="Page ${p}" ${p === currentPage ? 'aria-current="page"' : ''}>${p}</button>`;
   }
   if (end < totalPages) html += `${end < totalPages - 1 ? '<button disabled>…</button>' : ''}<button onclick="gotoPage(${totalPages})">${totalPages}</button>`;
-  html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="gotoPage(${currentPage + 1})">Next ›</button>`;
+  html += `<button ${currentPage === totalPages ? 'disabled' : ''} onclick="gotoPage(${currentPage + 1})" aria-label="Next page">Next ›</button>`;
 
   container.innerHTML = html;
 }
@@ -462,7 +752,7 @@ function setupSearchInput() {
       loadSongs();
 
       try {
-        const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(val)}`);
+        const res = await fetch(`/api/search/suggestions?q=${encodeURIComponent(val)}&language=si`);
         const suggestions = await res.json();
         if (suggestions.length) {
           box.innerHTML = '';
@@ -498,17 +788,17 @@ async function loadFeaturedArtists() {
     const container = document.getElementById('artists-grid');
     if (!container) return;
     container.innerHTML = artists.map((a) => `
-      <article class="card" style="padding:20px;cursor:pointer;background:#141829;border:1px solid rgba(255,255,255,0.1);border-radius:12px;transition:transform 0.2s, border-color 0.2s" onclick="filterByArtist('${a.name.replace(/'/g, "\\'")}')">
+      <article class="feature" style="cursor:pointer;" onclick="filterByArtist('${a.name.replace(/'/g, "\\'")}')">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <span class="badge-classic" style="font-size:11px">${a.era}</span>
-          <span style="font-size:12px;color:#a8a3b5">${a.active_period}</span>
+          <span style="font-size:12px;color:var(--text-muted)">${a.active_period}</span>
         </div>
-        <h3 style="margin:4px 0 2px;font-size:17px">${a.name}</h3>
-        <p style="font-size:13px;color:#efbacf;margin:0 0 10px">${a.name_si}</p>
-        <p style="font-size:12px;line-height:1.6;color:#c6c0d0;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${a.biography}</p>
-        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#a8a3b5;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px">
+        <h3 style="margin:4px 0 2px;font-size:18px">${a.name}</h3>
+        <p style="font-size:13px;color:var(--accent-primary);margin:0 0 10px;font-weight:600">${a.name_si}</p>
+        <p style="font-size:13px;line-height:1.6;color:var(--text-secondary);margin:0 0 14px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${a.biography}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border-subtle);padding-top:10px">
           <span>${a.catalog_song_count} catalogued songs</span>
-          <span style="color:#efbacf;font-weight:600">Filter Songs →</span>
+          <span style="color:var(--accent-primary);font-weight:700">Filter Songs →</span>
         </div>
       </article>
     `).join('');
@@ -519,7 +809,7 @@ async function loadFeaturedArtists() {
 
 function filterByArtist(artistName) {
   currentSearch = artistName;
-  const input = document.getElementById('search-input');
+  const input = document.getElementById('song-search');
   if (input) input.value = artistName;
   currentPage = 1;
   loadSongs();

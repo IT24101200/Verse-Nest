@@ -10,9 +10,11 @@
   <link rel="stylesheet" href="assets/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
 </head>
-<body style="font-family:'Noto Sans Sinhala', Inter, sans-serif">
+<body>
+
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <header class="site-header">
   <div class="shell header-inner">
@@ -21,11 +23,31 @@
       <span>Verse<span> Nest</span></span>
     </a>
     <nav class="nav" aria-label="Main navigation">
-      <a href="index.html#browse">Lyrics</a>
-      <a href="sinhala.html" style="color:#efbacf">සිංහල ගීත</a>
-      <a href="index.html#guides">Guides</a>
+      <a href="index.html#browse-originals">English Originals</a>
+      <a href="sinhala.html" style="color:var(--accent-primary);font-weight:700">සිංහල ගීත (Library)</a>
+      <a href="index.html#browse-classics">Classics</a>
+      <a href="index.html#guides">Writing Guides</a>
       <a href="about.html">About</a>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark and light theme">
+        <span aria-hidden="true">🌓</span>
+        <span id="theme-btn-label">Theme</span>
+      </button>
     </nav>
+    <button class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation drawer" aria-expanded="false" id="mobile-toggle-btn">
+      ☰
+    </button>
+  </div>
+
+  <div class="mobile-drawer" id="mobile-drawer" role="navigation" aria-label="Mobile navigation">
+    <a href="index.html" onclick="toggleMobileNav()">🏠 Home</a>
+    <a href="sinhala.html" style="color:var(--accent-primary);font-weight:700" onclick="toggleMobileNav()">🎵 Sinhala Song Library</a>
+    <a href="index.html#browse-classics" onclick="toggleMobileNav()">★ Classic Masterpieces</a>
+    <a href="index.html#guides" onclick="toggleMobileNav()">📖 Songwriting Guides</a>
+    <a href="about.html" onclick="toggleMobileNav()">ℹ️ About VerseNest</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px">
+      <span style="font-size:14px;color:var(--text-secondary)">Theme Mode:</span>
+      <button class="theme-toggle-btn" onclick="toggleTheme()"><span>🌓</span> Switch Mode</button>
+    </div>
   </div>
 </header>
 
@@ -33,44 +55,38 @@
   <section class="page-hero">
     <div class="shell">
       <div class="breadcrumbs">
-        <a href="index.html">Home</a><span>/</span><span>Copyright Policy &amp; Notice</span>
+        <a href="index.html">Home</a><span>/</span><span>Copyright &amp; Takedown Policy</span>
       </div>
       <div class="page-heading">
-        <span class="eyebrow">Legal Compliance &amp; Rights</span>
-        <h1>Copyright, Licensing &amp; Rights Policy</h1>
-        <p>Our commitment to protecting artist intellectual property, transparent rights classification, and rapid takedown compliance.</p>
+        <span class="eyebrow">Legal &amp; Rights Compliance</span>
+        <h1>Copyright, Licensing &amp; Takedown Policy</h1>
+        <p>Our commitment to intellectual property protection, verified songwriting credits, and zero unauthorized lyrics reproduction.</p>
       </div>
     </div>
   </section>
 
   <section class="shell reading">
     <article class="prose">
-      <h2>1. Our Principles on Song Lyrics &amp; Composition Rights</h2>
-      <p>VerseNest is an independent, educational Sri Lankan music discovery platform. We believe in honoring the creative rights of songwriters, composers, lyricists, and music publishers. We strictly forbid unauthorized scraping or reproduction of copyrighted song lyrics.</p>
+      <h2>Commitment to Artist Rights</h2>
+      <p>VerseNest Originals is built on the principle of deep respect for musical creators, lyricists, composers, and recording artists. We do not engage in unauthorized scraping or mass unlicensed publication of copyrighted lyrics.</p>
 
-      <h2>2. Six-Tiered Rights Classification System</h2>
-      <p>Every song in our catalogue is classified into one of six legal copyright states:</p>
+      <h2>Our Three-Tier Rights Framework</h2>
       <ul>
-        <li><strong>Original Owned:</strong> Original creative works written and owned directly by VerseNest Originals.</li>
-        <li><strong>Permission Granted:</strong> Lyrics published with documented, verified permission from the copyright owner or lyricist.</li>
-        <li><strong>Public Domain:</strong> Traditional folk songs and verified historic works whose copyright protection has expired.</li>
-        <li><strong>Licensed Attribution:</strong> Works published under Creative Commons or documented statutory licenses with strict attribution.</li>
-        <li><strong>Rights Unknown (Lyrics Unavailable):</strong> Songs where publisher permission has not yet been verified. For these titles, only verified metadata (singer, composer, year) and official streaming links are shown. Full lyrics are withheld.</li>
-        <li><strong>Permission Rejected / Revoked:</strong> Works where rights holders have requested exclusion or permission was declined. Lyrics are permanently blocked.</li>
+        <li><strong>Original Owned Content:</strong> Creative lyrics written specifically as original demo texts by our contributors for educational and songwriting analysis.</li>
+        <li><strong>Authorized / Permission Granted:</strong> Third-party lyrics published strictly with verifiable authorization or established public-domain standing.</li>
+        <li><strong>Rights Unknown / Restricted:</strong> Where copyright ownership resides with commercial publishers and explicit digital text distribution rights have not been secured, full lyrics are strictly shielded. In these cases, we present verified metadata, educational commentary, and direct links to official streaming platforms.</li>
       </ul>
 
-      <h2>3. Notice and Takedown Procedure</h2>
-      <p>If you are a songwriter, composer, lyricist, recording artist, or authorized publishing representative and believe any content appears without appropriate permission, we provide a rapid, 1-click administrative takedown workflow.</p>
-      <div class="notice">
-        <strong>Direct Takedown Submission:</strong> Please submit your notice via our <a href="contact.html">Contact Portal</a> or email <code>copyright@versenest.org</code> with:
-        <br>1. Title and Artist of the composition.
-        <br>2. Specific URL on VerseNest.
-        <br>3. Evidence of ownership or agency.
-        <br>Action will be taken within 24–48 business hours.
-      </div>
+      <h2>Notice &amp; Takedown Mechanism</h2>
+      <p>If you are a copyright owner, lyricist, composer, or publisher and believe any content on VerseNest infringes your intellectual property, please submit an expedited takedown notice through any of the following channels:</p>
+      <ol>
+        <li>Click the <strong>Notice &amp; Takedown Portal</strong> button on the target song's detail page for immediate registration in our admin review queue.</li>
+        <li>Email our legal team at <strong style="color:var(--text-primary)">rights@versenest.org</strong> with the target song ID and proof of ownership.</li>
+      </ol>
+      <p>All credible notices result in immediate removal of lyrics text within 24 hours.</p>
 
-      <h2>4. Public Music Metadata Sources</h2>
-      <p>Non-copyrightable factual bibliographic data (song titles, artist names, release years, genres, and composer credits) are indexed for educational and archival discovery using permissible public databases including MusicBrainz, following API terms of service and rate limitations.</p>
+      <h2>Google AdSense &amp; Monetization Policy</h2>
+      <p>Pages that do not feature authorized lyrics do not serve advertisements. VerseNest adheres strictly to publisher policies against low-value scraped content, ensuring all indexable pages offer unique educational or original creative merit.</p>
     </article>
   </section>
 </main>
@@ -80,21 +96,57 @@
     <div class="footer-grid">
       <div>
         <a class="brand" href="index.html">
-          <span class="brand-mark">♫</span>
+          <span class="brand-mark" aria-hidden="true">♫</span>
           <span>Verse<span> Nest</span></span>
         </a>
-        <p>A modern, educational discovery platform celebrating Sri Lankan music heritage.</p>
+        <p>A modern, educational discovery platform celebrating Sri Lankan music, poetry, and songwriting heritage. Built for performance, legal rights, and AdSense readiness.</p>
       </div>
       <div class="footer-links">
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
-        <a href="copyright.html">Copyright</a>
+        <a href="copyright.html">Copyright &amp; Takedown</a>
         <a href="privacy.html">Privacy</a>
         <a href="terms.html">Terms</a>
+        <a href="admin.html" style="color:var(--accent-primary);font-weight:600">Admin Portal</a>
       </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 VerseNest Originals. Sri Lankan Music Discovery Project.</span>
+      <span>All composition rights belong to original artists and publishers.</span>
     </div>
   </div>
 </footer>
 
+<script>
+function initTheme() {
+  const saved = localStorage.getItem('versenest_theme');
+  if (saved === 'light') {
+    document.body.classList.add('theme-light');
+    document.documentElement.setAttribute('data-theme', 'light');
+    const lbl = document.getElementById('theme-btn-label');
+    if (lbl) lbl.textContent = 'Dark';
+  } else {
+    document.body.classList.remove('theme-light');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    const lbl = document.getElementById('theme-btn-label');
+    if (lbl) lbl.textContent = 'Light';
+  }
+}
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('theme-light');
+  document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  localStorage.setItem('versenest_theme', isLight ? 'light' : 'dark');
+  const lbl = document.getElementById('theme-btn-label');
+  if (lbl) lbl.textContent = isLight ? 'Dark' : 'Light';
+}
+function toggleMobileNav() {
+  const drawer = document.getElementById('mobile-drawer');
+  const btn = document.getElementById('mobile-toggle-btn');
+  const isOpen = drawer.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  btn.textContent = isOpen ? '✕' : '☰';
+}
+initTheme();
+</script>
 </body>
 </html>
