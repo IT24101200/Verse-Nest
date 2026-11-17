@@ -216,6 +216,18 @@
       <!-- Pagination Controls -->
       <div class="pagination" id="pagination"></div>
 
+      <!-- Featured Artists & Cultural Biographies Section -->
+      <section style="margin-top:60px;padding-top:40px;border-top:1px solid rgba(255,255,255,0.1)">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;margin-bottom:24px;flex-wrap:wrap;gap:10px">
+          <div>
+            <span class="eyebrow">Verified Artists &amp; Legends</span>
+            <h2 style="margin:4px 0 0;font-size:24px;font-family:Georgia,serif">ශ්‍රී ලාංකේය සංගීත ප්‍රවීණයෝ</h2>
+          </div>
+          <span style="font-size:13px;color:#a8a3b5">Verified historical facts, active eras &amp; cultural impact</span>
+        </div>
+        <div class="card-grid" id="artists-grid" style="grid-template-columns:repeat(auto-fill, minmax(280px, 1fr));gap:20px"></div>
+      </section>
+
     </div>
   </section>
 
@@ -269,6 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initTheme();
   loadFilterDropdowns();
   loadSongs();
+  loadFeaturedArtists();
   setupSearchInput();
 });
 
@@ -476,6 +489,44 @@ function setupSearchInput() {
       box.style.display = 'none';
     }
   });
+}
+
+async function loadFeaturedArtists() {
+  try {
+    const res = await fetch('/api/artists');
+    const artists = await res.json();
+    const container = document.getElementById('artists-grid');
+    if (!container) return;
+    container.innerHTML = artists.map((a) => `
+      <article class="card" style="padding:20px;cursor:pointer;background:#141829;border:1px solid rgba(255,255,255,0.1);border-radius:12px;transition:transform 0.2s, border-color 0.2s" onclick="filterByArtist('${a.name.replace(/'/g, "\\'")}')">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span class="badge-classic" style="font-size:11px">${a.era}</span>
+          <span style="font-size:12px;color:#a8a3b5">${a.active_period}</span>
+        </div>
+        <h3 style="margin:4px 0 2px;font-size:17px">${a.name}</h3>
+        <p style="font-size:13px;color:#efbacf;margin:0 0 10px">${a.name_si}</p>
+        <p style="font-size:12px;line-height:1.6;color:#c6c0d0;margin:0 0 12px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden">${a.biography}</p>
+        <div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#a8a3b5;border-top:1px solid rgba(255,255,255,0.08);padding-top:10px">
+          <span>${a.catalog_song_count} catalogued songs</span>
+          <span style="color:#efbacf;font-weight:600">Filter Songs →</span>
+        </div>
+      </article>
+    `).join('');
+  } catch (err) {
+    console.error('Error loading artists:', err);
+  }
+}
+
+function filterByArtist(artistName) {
+  currentSearch = artistName;
+  const input = document.getElementById('search-input');
+  if (input) input.value = artistName;
+  currentPage = 1;
+  loadSongs();
+  const target = document.getElementById('browse-sinhala');
+  if (target) {
+    window.scrollTo({ top: target.offsetTop - 40, behavior: 'smooth' });
+  }
 }
 </script>
 

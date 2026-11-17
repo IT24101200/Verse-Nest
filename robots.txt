@@ -1,3 +1,7 @@
 User-agent: *
 Allow: /
-# Add a Sitemap directive after generating sitemap.xml with your live domain.
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /api/admin/
+
+Sitemap: https://versenest.org/sitemap.xml

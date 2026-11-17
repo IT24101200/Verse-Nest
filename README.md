@@ -28,13 +28,14 @@ cd "e:\Projects\versenest_website\versenest_website\backend"
 py server.py
 ```
 
-Open your browser at: **http://localhost:8000**
+Open your browser at: **http://localhost:8080** (or your configured `PORT`)
 
-* **Homepage:** [http://localhost:8000/](http://localhost:8000/)
-* **Sinhala Song Discovery:** [http://localhost:8000/sinhala.html](http://localhost:8000/sinhala.html)
-* **Admin Portal:** [http://localhost:8000/admin.html](http://localhost:8000/admin.html) *(Managed via `backend/manage_admin.py` and `.env`)*
-* **Dynamic SEO Sitemap:** [http://localhost:8000/sitemap.xml](http://localhost:8000/sitemap.xml)
-* **Interactive API Documentation:** [http://localhost:8000/docs](http://localhost:8000/docs)
+* **Homepage:** [http://localhost:8080/](http://localhost:8080/)
+* **Sinhala Song Discovery:** [http://localhost:8080/sinhala.html](http://localhost:8080/sinhala.html)
+* **Admin Portal:** [http://localhost:8080/admin.html](http://localhost:8080/admin.html) *(Managed via `backend/manage_admin.py` and `.env`)*
+* **Dynamic SEO Sitemap:** [http://localhost:8080/sitemap.xml](http://localhost:8080/sitemap.xml)
+* **Robots.txt Directive:** [http://localhost:8080/robots.txt](http://localhost:8080/robots.txt)
+* **Interactive API Documentation:** [http://localhost:8080/docs](http://localhost:8080/docs)
 
 ---
 

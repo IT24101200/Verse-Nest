@@ -1,15 +1,21 @@
 # -*- coding: utf-8 -*-
 """
 VerseNest Originals - Security & Cryptographic Authentication Engine
-Implements PBKDF2-HMAC-SHA256 password hashing with salt,
-cryptographic token signing, secret rotation, and environment variable management.
+Upgraded security implementation:
+- PBKDF2-HMAC-SHA256 with 600,000 iterations and 16-byte cryptographically secure salt.
+- Automatic hash migration from older iteration counts (< 600,000) to 600,000 iterations.
+- Protection against known default or weak credentials.
+- IP and username login rate limiting with sliding window tracking in SQLite.
+- Cryptographic session token signing, expiration, and server-side revocation / logout.
+- Environment variable persistence and automated production secret generation.
 """
 import os
 import hmac
 import hashlib
 import secrets
 import time
-from typing import Tuple, Optional
+from typing import Tuple, Optional, Dict, Any
+from database import get_db_connection
 
 # Load or generate .env file
 ENV_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
@@ -38,7 +44,6 @@ ENVIRONMENT=production
 """
         with open(ENV_PATH, "w", encoding="utf-8") as f:
             f.write(content)
-        print(f"[Security] Generated new .env file with secure secrets.")
 
 ensure_env_file()
 load_env()
@@ -48,51 +53,183 @@ if not SECRET_KEY:
     SECRET_KEY = secrets.token_hex(32)
     os.environ["VERSENEST_SECRET_KEY"] = SECRET_KEY
 
-def hash_password(password: str) -> str:
-    """Hashes a plaintext password using PBKDF2-HMAC-SHA256 with a 16-byte random salt."""
-    salt = secrets.token_bytes(16)
-    pwd_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, 100000)
-    return f"pbkdf2_sha256$100000${salt.hex()}${pwd_hash.hex()}"
+# Security parameters
+PBKDF2_ITERATIONS = 600000
+DISALLOWED_DEFAULT_PASSWORDS = {"versenest2026", "admin", "admin123", "password", "12345678", "guest"}
+MAX_FAILED_LOGIN_ATTEMPTS = 5
+RATE_LIMIT_WINDOW_SECONDS = 300  # 5 minutes
 
-def verify_password(password: str, stored_hash: str) -> bool:
-    """Verifies a password against a stored PBKDF2-HMAC-SHA256 hash."""
+def hash_password(password: str, iterations: int = PBKDF2_ITERATIONS) -> str:
+    """Hashes a password using PBKDF2-HMAC-SHA256 with a 16-byte random salt and 600,000 iterations."""
+    salt = secrets.token_bytes(16)
+    pwd_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
+    return f"pbkdf2_sha256${iterations}${salt.hex()}${pwd_hash.hex()}"
+
+def verify_and_check_rehash(password: str, stored_hash: str) -> Tuple[bool, bool]:
+    """
+    Verifies password against stored PBKDF2 hash.
+    Returns (is_valid, needs_rehash).
+    needs_rehash is True if iteration count is less than 600,000.
+    """
     try:
         parts = stored_hash.split("$")
         if len(parts) != 4 or parts[0] != "pbkdf2_sha256":
-            return False
+            return False, False
         iterations = int(parts[1])
         salt = bytes.fromhex(parts[2])
         expected_hash = bytes.fromhex(parts[3])
         computed_hash = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt, iterations)
-        return hmac.compare_digest(expected_hash, computed_hash)
+        is_valid = hmac.compare_digest(expected_hash, computed_hash)
+        needs_rehash = is_valid and (iterations < PBKDF2_ITERATIONS)
+        return is_valid, needs_rehash
     except Exception:
-        return False
+        return False, False
+
+def verify_password(password: str, stored_hash: str) -> bool:
+    """Convenience wrapper for verify_and_check_rehash."""
+    is_valid, _ = verify_and_check_rehash(password, stored_hash)
+    return is_valid
+
+def is_password_allowed(password: str) -> Tuple[bool, str]:
+    """Checks whether password meets basic security standards and is not a known default."""
+    if not password or len(password) < 8:
+        return False, "Password must be at least 8 characters long."
+    if password.lower() in DISALLOWED_DEFAULT_PASSWORDS:
+        return False, "The default password is disabled for production security. Please choose a unique password."
+    return True, ""
+
+# ==================== LOGIN RATE LIMITING ====================
+
+def check_login_rate_limit(ip: str, username: str) -> Tuple[bool, int]:
+    """
+    Checks if client IP or username has exceeded allowed failed login attempts.
+    Returns (is_allowed, retry_after_seconds).
+    """
+    now = int(time.time())
+    cutoff = now - RATE_LIMIT_WINDOW_SECONDS
+
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    # Clean old attempts older than 1 hour
+    cursor.execute("DELETE FROM login_attempts WHERE attempted_at < ?;", (now - 3600,))
+
+    # Count failed attempts for this IP or username in current window
+    cursor.execute("""
+        SELECT COUNT(*), MAX(attempted_at) FROM login_attempts
+        WHERE (ip = ? OR username = ?) AND success = 0 AND attempted_at >= ?;
+    """, (ip, username, cutoff))
+    row = cursor.fetchone()
+    failed_count = row[0] if row else 0
+    latest_attempt = row[1] if row and row[1] else now
+
+    conn.commit()
+    conn.close()
+
+    if failed_count >= MAX_FAILED_LOGIN_ATTEMPTS:
+        retry_after = max(1, RATE_LIMIT_WINDOW_SECONDS - (now - latest_attempt))
+        return False, retry_after
+
+    return True, 0
+
+def record_login_attempt(ip: str, username: str, success: bool):
+    """Records a login attempt (success or failure) for security auditing."""
+    now = int(time.time())
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO login_attempts (ip, username, attempted_at, success)
+        VALUES (?, ?, ?, ?);
+    """, (ip, username, now, 1 if success else 0))
+
+    # If login was successful, clear previous failures for this IP/username
+    if success:
+        cursor.execute("""
+            DELETE FROM login_attempts WHERE (ip = ? OR username = ?) AND success = 0;
+        """, (ip, username))
+
+    conn.commit()
+    conn.close()
+
+# ==================== SESSION TOKEN MANAGEMENT & REVOCATION ====================
 
 def generate_session_token(username: str, duration_hours: int = 8) -> str:
-    """Generates an HMAC-signed session bearer token with expiration."""
+    """Generates an HMAC-signed session bearer token with timestamp."""
     expiry = int(time.time()) + (duration_hours * 3600)
-    payload = f"{username}:{expiry}"
+    nonce = secrets.token_hex(8)
+    payload = f"{username}:{expiry}:{nonce}"
     sig = hmac.new(SECRET_KEY.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
     return f"{payload}:{sig}"
 
+def is_token_revoked(token_sig: str) -> bool:
+    """Checks whether token signature has been revoked in database."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    now = int(time.time())
+    # Clean expired revoked tokens
+    cursor.execute("DELETE FROM revoked_tokens WHERE expires_at < ?;", (now,))
+    cursor.execute("SELECT 1 FROM revoked_tokens WHERE token_sig = ?;", (token_sig,))
+    revoked = cursor.fetchone() is not None
+    conn.commit()
+    conn.close()
+    return revoked
+
+def revoke_token(token: str) -> bool:
+    """Revokes a session bearer token on logout."""
+    if not token:
+        return False
+    parts = token.split(":")
+    if len(parts) != 4:
+        return False
+    _, expiry_str, _, sig = parts
+    try:
+        expiry = int(expiry_str)
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("""
+            INSERT OR REPLACE INTO revoked_tokens (token_sig, expires_at)
+            VALUES (?, ?);
+        """, (sig, expiry))
+        conn.commit()
+        conn.close()
+        return True
+    except Exception:
+        return False
+
 def verify_session_token(token: Optional[str]) -> Tuple[bool, Optional[str]]:
     """
-    Verifies token signature and expiration.
+    Verifies token signature, expiration, and ensures it has not been revoked.
     Returns (is_valid, username).
     """
     if not token:
         return False, None
     parts = token.split(":")
-    if len(parts) != 3:
+    if len(parts) != 4:
+        # Also support legacy 3-part tokens without nonce during transition
+        if len(parts) == 3:
+            username, expiry_str, sig = parts
+            try:
+                expiry = int(expiry_str)
+                if time.time() > expiry:
+                    return False, None
+                expected_sig = hmac.new(SECRET_KEY.encode("utf-8"), f"{username}:{expiry}".encode("utf-8"), hashlib.sha256).hexdigest()
+                if hmac.compare_digest(sig, expected_sig) and not is_token_revoked(sig):
+                    return True, username
+            except Exception:
+                pass
         return False, None
-    username, expiry_str, sig = parts
+
+    username, expiry_str, nonce, sig = parts
     try:
         expiry = int(expiry_str)
         if time.time() > expiry:
             return False, None
-        expected_sig = hmac.new(SECRET_KEY.encode("utf-8"), f"{username}:{expiry}".encode("utf-8"), hashlib.sha256).hexdigest()
-        if hmac.compare_digest(sig, expected_sig):
-            return True, username
-        return False, None
+        payload = f"{username}:{expiry}:{nonce}"
+        expected_sig = hmac.new(SECRET_KEY.encode("utf-8"), payload.encode("utf-8"), hashlib.sha256).hexdigest()
+        if not hmac.compare_digest(sig, expected_sig):
+            return False, None
+        if is_token_revoked(sig):
+            return False, None
+        return True, username
     except Exception:
         return False, None

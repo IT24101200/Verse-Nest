@@ -2,20 +2,26 @@
 """
 VerseNest Originals - Admin User Management CLI
 Safely creates, rotates, and manages securely hashed administrator credentials in SQLite.
+Enforces 600,000 iterations PBKDF2-HMAC-SHA256 and blocks default credentials.
 """
 import argparse
 import os
 import sys
 from database import get_db_connection, init_db
-from security import hash_password, load_env
+from security import hash_password, load_env, is_password_allowed
 
 def set_admin_credentials(username: str, password: str, role: str = "admin"):
-    """Inserts or updates an administrator user with PBKDF2 password hash."""
+    """Inserts or updates an administrator user with PBKDF2 600,000-iteration hash."""
+    allowed, msg = is_password_allowed(password)
+    if not allowed:
+        print(f"[Admin CLI Error] {msg}")
+        sys.exit(1)
+
     init_db()
     conn = get_db_connection()
     cursor = conn.cursor()
 
-    pwd_hash = hash_password(password)
+    pwd_hash = hash_password(password, iterations=600000)
     cursor.execute("""
         INSERT INTO admin_users (username, password_hash, role)
         VALUES (?, ?, ?)
@@ -25,7 +31,7 @@ def set_admin_credentials(username: str, password: str, role: str = "admin"):
     """, (username, pwd_hash, role))
     conn.commit()
     conn.close()
-    print(f"[Admin CLI] Admin user '{username}' successfully configured with secure password hash.")
+    print(f"[Admin CLI] Admin user '{username}' successfully configured with 600,000-iteration PBKDF2 password hash.")
 
 if __name__ == "__main__":
     load_env()

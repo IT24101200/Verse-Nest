@@ -143,6 +143,57 @@ def init_db():
     );
     """)
 
+    # 6. Revoked Admin Tokens Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS revoked_tokens (
+        token_sig TEXT PRIMARY KEY,
+        revoked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        expires_at INTEGER NOT NULL
+    );
+    """)
+
+    # 7. Login Attempts Rate Limiting Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS login_attempts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ip TEXT NOT NULL,
+        username TEXT NOT NULL,
+        attempted_at INTEGER NOT NULL,
+        success INTEGER NOT NULL
+    );
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_login_attempts_ip ON login_attempts(ip, attempted_at);")
+
+    # 8. Synthetic Songs Archive Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS synthetic_songs_archive (
+        id INTEGER PRIMARY KEY,
+        song_uuid TEXT,
+        title_si TEXT,
+        title_en TEXT,
+        artist TEXT,
+        genre TEXT,
+        publication_status TEXT,
+        archived_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        archive_reason TEXT DEFAULT 'Unverified procedural combination removed from production catalogue'
+    );
+    """)
+
+    # 9. Artist Biographies Table
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS artists (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT UNIQUE NOT NULL,
+        name_si TEXT NOT NULL,
+        era TEXT NOT NULL,
+        biography TEXT NOT NULL,
+        cultural_significance TEXT NOT NULL,
+        active_period TEXT NOT NULL,
+        image_url TEXT DEFAULT '',
+        musicbrainz_artist_id TEXT DEFAULT ''
+    );
+    """)
+
     conn.commit()
     conn.close()
 

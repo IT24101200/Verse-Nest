@@ -149,15 +149,18 @@ class TestVerseNestPlatform(unittest.TestCase):
         print("✓ TEST 9 PASSED: Unauthorized admin access strictly rejected with HTTP 401.")
 
     def test_10_database_persistence_across_restarts(self):
-        """TEST 10: Restart application / check disk persistence. Expected: stored songs remain available."""
+        """TEST 10: Check disk persistence & clean segregation. Expected: genuine verified songs in production, synthetic in archive."""
         self.assertTrue(os.path.exists(DB_PATH))
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM songs;")
+        cursor.execute("SELECT COUNT(*) FROM songs WHERE publication_status = 'published';")
         count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM synthetic_songs_archive;")
+        archive_count = cursor.fetchone()[0]
         conn.close()
-        self.assertGreaterEqual(count, 5000)
-        print(f"✓ TEST 10 PASSED: Database persistence verified. {count} songs safely stored in SQLite.")
+        self.assertGreaterEqual(count, 70)
+        self.assertEqual(archive_count, 4975)
+        print(f"✓ TEST 10 PASSED: Database persistence verified. {count} genuine songs active, {archive_count} synthetic records securely archived.")
 
     def test_11_admin_pbkdf2_authentication(self):
         """TEST 11: Admin login with PBKDF2 hash verification. Expected: correct password grants token, incorrect rejected."""
@@ -190,6 +193,67 @@ class TestVerseNestPlatform(unittest.TestCase):
             data = res.json()
             self.assertIsInstance(data["songs"], list)
         print("✓ TEST 12 PASSED: SQL injection payloads handled safely via parameterized queries.")
+
+    def test_13_login_rate_limiting(self):
+        """TEST 13: Login rate limiting. Expected: HTTP 429 after 5 failed attempts."""
+        # Send 5 failed attempts with an isolated test username
+        test_user = "ratelimit_probe_user"
+        for _ in range(5):
+            client.post("/api/admin/login", json={"username": test_user, "password": "bad_password"})
+        
+        # 6th attempt must trigger HTTP 429
+        res_blocked = client.post("/api/admin/login", json={"username": test_user, "password": "bad_password"})
+        self.assertEqual(res_blocked.status_code, 429)
+        self.assertIn("Too many failed login attempts", res_blocked.json()["detail"])
+        print("✓ TEST 13 PASSED: Login rate limiting successfully rejects brute-force attempts with HTTP 429.")
+
+    def test_14_admin_logout_revocation(self):
+        """TEST 14: Token revocation on logout. Expected: session bearer token invalidated after logout."""
+        token = generate_admin_token("admin")
+        headers = {"Authorization": f"Bearer {token}"}
+
+        # Token is initially valid
+        res_valid = client.get("/api/admin/me", headers=headers)
+        self.assertEqual(res_valid.status_code, 200)
+
+        # Logout
+        res_logout = client.post("/api/admin/logout", headers=headers)
+        self.assertEqual(res_logout.status_code, 200)
+
+        # Subsequent use of revoked token must be rejected with HTTP 401
+        res_revoked = client.get("/api/admin/me", headers=headers)
+        self.assertEqual(res_revoked.status_code, 401)
+        print("✓ TEST 14 PASSED: Admin logout immediately revokes session token.")
+
+    def test_15_artist_biographies_endpoint(self):
+        """TEST 15: Artist biography retrieval. Expected: verified facts, active period, and cultural impact."""
+        res = client.get("/api/artists")
+        self.assertEqual(res.status_code, 200)
+        artists = res.json()
+        self.assertGreaterEqual(len(artists), 10)
+
+        # Check detail for W.D. Amaradeva
+        res_detail = client.get("/api/artists/W.D.%20Amaradeva")
+        self.assertEqual(res_detail.status_code, 200)
+        data = res_detail.json()
+        self.assertEqual(data["name"], "W.D. Amaradeva")
+        self.assertIn("Ramon Magsaysay", data["cultural_significance"])
+        self.assertIsInstance(data["catalog_songs"], list)
+        print("✓ TEST 15 PASSED: Verified artist biography and catalogue associations validated.")
+
+    def test_16_robots_txt_and_sitemap(self):
+        """TEST 16: Robots.txt & Sitemap validation. Expected: sitemap directive, admin disallow, clean URLs."""
+        res_robots = client.get("/robots.txt")
+        self.assertEqual(res_robots.status_code, 200)
+        self.assertIn("Sitemap: https://versenest.org/sitemap.xml", res_robots.text)
+        self.assertIn("Disallow: /admin", res_robots.text)
+
+        res_sitemap = client.get("/sitemap.xml")
+        self.assertEqual(res_sitemap.status_code, 200)
+        self.assertIn("<urlset", res_sitemap.text)
+        self.assertNotIn("song=38", res_sitemap.text)  # Ensure no synthetic songs in sitemap
+        print("✓ TEST 16 PASSED: robots.txt directives and sitemap canonical URLs verified.")
+
 
 
 if __name__ == "__main__":

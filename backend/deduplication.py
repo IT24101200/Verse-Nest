@@ -154,7 +154,7 @@ def evaluate_song_duplicate(candidate: Dict[str, Any], conn) -> DuplicateCheckRe
 
     # 3. Check Exact Normalized Title + Artist
     cursor.execute("""
-        SELECT id, title_si, title_en, artist, lyricist, composer, release_year
+        SELECT id, title_si, title_en, artist, lyricist, composer, release_year, song_type
         FROM songs 
         WHERE (normalized_title_si = ? OR normalized_title_en = ?)
           AND normalized_artist = ?
@@ -162,14 +162,16 @@ def evaluate_song_duplicate(candidate: Dict[str, Any], conn) -> DuplicateCheckRe
     """, (c_title_si, c_title_en, c_artist))
     exact_match = cursor.fetchone()
     if exact_match:
-        # Check if candidate explicitly states it is a cover or remake
-        cand_type = (candidate.get("song_type") or "").lower()
-        if any(t in cand_type for t in ["cover", "remake", "live version", "remix"]):
+        cand_type = (candidate.get("song_type") or "").strip().lower()
+        exist_type = (exact_match["song_type"] or "").strip().lower()
+
+        # If candidate is a different version (e.g. Acoustic vs Original) of the same song
+        if cand_type and exist_type and cand_type != exist_type and any(t in cand_type for t in ["cover", "remake", "live", "remix", "acoustic"]):
             return DuplicateCheckResult(
                 action="queue_review",
                 match_type="distinct_version",
                 score=0.88,
-                reasons=[f"Identical title and artist but specified as {cand_type}"],
+                reasons=[f"Identical title and artist but different version: candidate={cand_type}, existing={exist_type}"],
                 existing_song_id=exact_match["id"]
             )
 

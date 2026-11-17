@@ -10,6 +10,7 @@ import uuid
 import time
 import hmac
 import hashlib
+import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
 
@@ -23,7 +24,32 @@ from database import get_db_connection, init_db
 from deduplication import normalize_sinhala_text, normalize_english_text, evaluate_song_duplicate
 from search_engine import search_songs, get_search_suggestions
 from discovery import run_discovery_pipeline
-from security import verify_password, generate_session_token, verify_session_token, SECRET_KEY
+from security import (
+    verify_password,
+    verify_and_check_rehash,
+    hash_password,
+    generate_session_token,
+    verify_session_token,
+    check_login_rate_limit,
+    record_login_attempt,
+    revoke_token,
+    is_password_allowed,
+    SECRET_KEY
+)
+
+# Configure Application Logging
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+LOG_FILE_PATH = os.path.join(BASE_DIR, "versenest_app.log")
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler(LOG_FILE_PATH, encoding="utf-8")
+    ]
+)
+logger = logging.getLogger("versenest")
 
 # Initialize database schema
 init_db()
@@ -31,8 +57,18 @@ init_db()
 app = FastAPI(
     title="VerseNest Originals API",
     description="Modern, scalable Sinhala songs and lyrics platform API",
-    version="2.0.0"
+    version="2.1.0"
 )
+
+# Request logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+    response = await call_next(request)
+    duration = time.time() - start_time
+    if response.status_code >= 400:
+        logger.warning(f"{request.method} {request.url.path} returned {response.status_code} in {duration:.3f}s")
+    return response
 
 # Enable CORS for cross-origin integration
 app.add_middleware(
@@ -306,6 +342,57 @@ def api_get_trending_artists(limit: int = 12):
     conn.close()
     return [{"artist": r["artist"], "song_count": r["song_count"], "views": r["total_views"]} for r in rows]
 
+@app.get("/api/artists")
+def api_get_artists():
+    """Returns all verified artist biographies with active periods and significance."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT a.id, a.name, a.name_si, a.era, a.active_period, a.cultural_significance, a.biography,
+               COUNT(s.id) as catalog_song_count
+        FROM artists a
+        LEFT JOIN songs s ON (s.artist = a.name OR s.artist LIKE '%' || a.name || '%') AND s.publication_status = 'published'
+        GROUP BY a.id
+        ORDER BY a.name ASC;
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+@app.get("/api/artists/{name}")
+def api_get_artist_detail(name: str):
+    """Returns detailed verified artist profile, historical notes, and catalogued songs."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT * FROM artists WHERE name = ? OR name_si = ?;
+    """, (name, name))
+    artist = cursor.fetchone()
+
+    # Search published songs by this artist
+    cursor.execute("""
+        SELECT id, title_si, title_en, genre, era_decade, release_year, youtube_url
+        FROM songs
+        WHERE (artist = ? OR artist LIKE ? OR singers LIKE ?) AND publication_status = 'published'
+        ORDER BY release_year ASC, title_si ASC;
+    """, (name, f"%{name}%", f"%{name}%"))
+    songs = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+
+    if not artist and not songs:
+        raise HTTPException(status_code=404, detail="Artist not found in catalogue.")
+
+    result = dict(artist) if artist else {
+        "name": name,
+        "name_si": name,
+        "era": "Sinhala Music",
+        "active_period": "Historical",
+        "biography": f"Catalogued Sri Lankan music artist featuring {len(songs)} verified songs on VerseNest.",
+        "cultural_significance": "Celebrated Sri Lankan music creator."
+    }
+    result["catalog_songs"] = songs
+    return result
+
 @app.post("/api/copyright/report")
 def api_submit_copyright_claim(claim: CopyrightClaimRequest):
     """Permits copyright owners to submit rapid takedown or permission notices."""
@@ -335,24 +422,90 @@ def api_submit_copyright_claim(claim: CopyrightClaimRequest):
 # ==================== ADMIN DASHBOARD API ====================
 
 @app.post("/api/admin/login")
-def api_admin_login(cred: LoginRequest):
-    """Admin login verifying secure PBKDF2 password hash from SQLite admin_users table."""
+def api_admin_login(cred: LoginRequest, request: Request):
+    """Admin login with rate limiting, PBKDF2 hash verification, and automatic 600k iteration re-hashing."""
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    # 1. Rate limiting check (max 5 failed attempts per 5 minutes)
+    allowed, retry_after = check_login_rate_limit(client_ip, cred.username)
+    if not allowed:
+        logger.warning(f"Login rate limit exceeded for IP {client_ip}, user '{cred.username}'")
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=f"Too many failed login attempts. Please wait {retry_after} seconds before trying again."
+        )
+
+    # 2. Block known default credentials
+    if cred.password.lower() in ("versenest2026", "admin", "password", "12345678"):
+        record_login_attempt(client_ip, cred.username, success=False)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="The default password is disabled for production security. Please rotate credentials using manage_admin.py."
+        )
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("SELECT username, password_hash, role FROM admin_users WHERE username = ?;", (cred.username,))
     user = cursor.fetchone()
+
+    if not user:
+        conn.close()
+        record_login_attempt(client_ip, cred.username, success=False)
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+
+    is_valid, needs_rehash = verify_and_check_rehash(cred.password, user["password_hash"])
+    if not is_valid:
+        conn.close()
+        record_login_attempt(client_ip, cred.username, success=False)
+        raise HTTPException(status_code=401, detail="Invalid username or password.")
+
+    # 3. Automatic hash migration to 600,000 iterations if needed
+    if needs_rehash:
+        new_hash = hash_password(cred.password, iterations=600000)
+        cursor.execute("UPDATE admin_users SET password_hash = ? WHERE username = ?;", (new_hash, cred.username))
+        conn.commit()
+        logger.info(f"Automatically migrated password hash for '{cred.username}' to 600,000 PBKDF2 iterations.")
+
     conn.close()
 
-    if user and verify_password(cred.password, user["password_hash"]):
-        token = generate_session_token(user["username"], duration_hours=8)
-        return {
-            "status": "success",
-            "token": token,
-            "username": user["username"],
-            "role": user["role"],
-            "message": "Authentication successful"
-        }
-    raise HTTPException(status_code=401, detail="Invalid username or password.")
+    # 4. Successful login
+    record_login_attempt(client_ip, cred.username, success=True)
+    token = generate_session_token(user["username"], duration_hours=8)
+    logger.info(f"Admin '{user['username']}' authenticated successfully from {client_ip}")
+    return {
+        "status": "success",
+        "token": token,
+        "username": user["username"],
+        "role": user["role"],
+        "message": "Authentication successful"
+    }
+
+@app.post("/api/admin/logout")
+def api_admin_logout(request: Request, admin: str = Depends(get_current_admin)):
+    """Logs out administrator and revokes current session bearer token."""
+    auth_header = request.headers.get("Authorization", "")
+    token = auth_header[7:].strip() if auth_header.startswith("Bearer ") else ""
+    if token:
+        revoke_token(token)
+    logger.info(f"Admin session for '{admin}' successfully logged out and revoked.")
+    return {"status": "success", "message": f"Admin session for '{admin}' successfully logged out and revoked."}
+
+@app.get("/api/admin/me")
+def api_admin_me(admin: str = Depends(get_current_admin)):
+    """Returns profile and session status for currently authenticated administrator."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, role, created_at FROM admin_users WHERE username = ?;", (admin,))
+    user = cursor.fetchone()
+    conn.close()
+    if not user:
+        raise HTTPException(status_code=404, detail="Admin user not found.")
+    return {
+        "username": user["username"],
+        "role": user["role"],
+        "created_at": user["created_at"],
+        "authenticated": True
+    }
 
 @app.get("/api/admin/dashboard-stats")
 def api_admin_dashboard_stats(admin: str = Depends(get_current_admin)):
@@ -680,12 +833,17 @@ def api_admin_export_database(admin: str = Depends(get_current_admin)):
 
 # ==================== SEO & STATIC SITEMAP ====================
 
+@app.get("/robots.txt", response_class=FileResponse)
+def serve_robots():
+    """Serves robots.txt with sitemap directive and crawl protections."""
+    return FileResponse(os.path.join(BASE_DIR, "robots.txt"), media_type="text/plain")
+
 @app.get("/sitemap.xml", response_class=Response)
 def api_sitemap():
     """Generates dynamic XML sitemap for SEO and Google Search Console."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, updated_at FROM songs WHERE publication_status = 'published';")
+    cursor.execute("SELECT id, source_url, updated_at FROM songs WHERE publication_status = 'published';")
     songs = cursor.fetchall()
     conn.close()
 
@@ -698,10 +856,14 @@ def api_sitemap():
     for page in ["", "sinhala.html", "about.html", "contact.html", "copyright.html", "privacy.html", "terms.html"]:
         xml_lines.append(f'  <url><loc>{base_url}/{page}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>')
 
-    # Individual Song Pages
+    # Individual Published Song Pages (Resolving canonical path)
     for s in songs:
-        date_str = str(s["updated_at"])[:10] if s["updated_at"] else "2026-11-16"
-        xml_lines.append(f'  <url><loc>{base_url}/lyrics/sinhala-song.html?song={s["id"]}</loc><lastmod>{date_str}</lastmod><priority>0.7</priority></url>')
+        date_str = str(s["updated_at"])[:10] if s["updated_at"] else "2026-11-17"
+        if s["source_url"] and s["source_url"].startswith("lyrics/"):
+            song_loc = f"{base_url}/{s['source_url']}"
+        else:
+            song_loc = f"{base_url}/lyrics/sinhala-song.html?song={s['id']}"
+        xml_lines.append(f'  <url><loc>{song_loc}</loc><lastmod>{date_str}</lastmod><priority>0.7</priority></url>')
 
     xml_lines.append('</urlset>')
     return Response(content="\n".join(xml_lines), media_type="application/xml")
@@ -753,4 +915,5 @@ def serve_admin():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("server:app", host="0.0.0.0", port=8000, reload=False)
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run("server:app", host="127.0.0.1", port=port, reload=False)
