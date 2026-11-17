@@ -833,10 +833,20 @@ def api_admin_export_database(admin: str = Depends(get_current_admin)):
 
 # ==================== SEO & STATIC SITEMAP ====================
 
-@app.get("/robots.txt", response_class=FileResponse)
+BASE_URL = os.environ.get("BASE_URL", "https://versenest.org").rstrip("/")
+
+@app.get("/robots.txt", response_class=Response)
 def serve_robots():
-    """Serves robots.txt with sitemap directive and crawl protections."""
-    return FileResponse(os.path.join(BASE_DIR, "robots.txt"), media_type="text/plain")
+    """Serves dynamic robots.txt with sitemap directive and crawl protections."""
+    content = f"""User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin.html
+Disallow: /api/admin/
+
+Sitemap: {BASE_URL}/sitemap.xml
+"""
+    return Response(content=content, media_type="text/plain")
 
 @app.get("/sitemap.xml", response_class=Response)
 def api_sitemap():
@@ -847,22 +857,21 @@ def api_sitemap():
     songs = cursor.fetchall()
     conn.close()
 
-    base_url = "https://versenest.org"
     xml_lines = [
         '<?xml version="1.0" encoding="UTF-8"?>',
         '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
     ]
     # Static pages
     for page in ["", "sinhala.html", "about.html", "contact.html", "copyright.html", "privacy.html", "terms.html"]:
-        xml_lines.append(f'  <url><loc>{base_url}/{page}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>')
+        xml_lines.append(f'  <url><loc>{BASE_URL}/{page}</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>')
 
     # Individual Published Song Pages (Resolving canonical path)
     for s in songs:
         date_str = str(s["updated_at"])[:10] if s["updated_at"] else "2026-11-17"
         if s["source_url"] and s["source_url"].startswith("lyrics/"):
-            song_loc = f"{base_url}/{s['source_url']}"
+            song_loc = f"{BASE_URL}/{s['source_url']}"
         else:
-            song_loc = f"{base_url}/lyrics/sinhala-song.html?song={s['id']}"
+            song_loc = f"{BASE_URL}/lyrics/sinhala-song.html?song={s['id']}"
         xml_lines.append(f'  <url><loc>{song_loc}</loc><lastmod>{date_str}</lastmod><priority>0.7</priority></url>')
 
     xml_lines.append('</urlset>')
