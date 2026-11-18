@@ -20,7 +20,6 @@ COPY data/ ./data/
 COPY data_seed/ ./data_seed/
 COPY *.html ./
 COPY robots.txt ./
-COPY sitemap.xml ./
 
 # Default environment configuration
 ENV PORT=8080
