@@ -7,57 +7,86 @@
   <meta name="description" id="meta-desc" content="Sinhala song lyrics, music metadata, and meaning on VerseNest.">
   <meta property="og:type" content="music.song">
   <meta property="og:title" id="og-title" content="Sinhala Song Lyrics | VerseNest">
-  <meta property="og:description" id="og-desc" content="Read full song information and authorized lyrics on VerseNest.">
+  <meta property="og:description" id="og-desc" content="Read full song information and musical metadata on VerseNest.">
+  <meta property="og:url" id="og-url" content="">
   <title id="page-title">Sinhala Song | VerseNest</title>
+  <link rel="canonical" id="canonical-url" href="">
   <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../assets/styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Sinhala:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   
   <style>
-    body { font-family: 'Noto Sans Sinhala', Inter, sans-serif; }
     .rights-banner {
-      background: #191f33;
-      border: 1px solid rgba(255,182,193,0.3);
-      border-left: 4px solid #ffb1bf;
-      border-radius: 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-left: 4px solid var(--accent-primary);
+      border-radius: var(--radius-md);
       padding: 16px 20px;
       margin: 20px 0;
       font-size: 14px;
       line-height: 1.6;
     }
     .lyrics-unavailable-box {
-      background: #131726;
-      border: 1px dashed rgba(255,255,255,0.2);
-      border-radius: 12px;
+      background: var(--bg-surface);
+      border: 1px dashed var(--border-default);
+      border-radius: var(--radius-lg);
       padding: 36px 24px;
       text-align: center;
       margin: 24px 0;
     }
-    .youtube-embed-box {
-      margin: 24px 0;
-      border-radius: 14px;
-      overflow: hidden;
-      background: #0f121e;
-      border: 1px solid rgba(255,255,255,0.15);
-      padding: 20px;
-      text-align: center;
-    }
     .meta-tag-pill {
       display: inline-block;
-      background: rgba(255,255,255,0.08);
-      border-radius: 20px;
-      padding: 4px 12px;
+      background: var(--bg-surface-elevated);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      border-radius: var(--radius-full);
+      padding: 4px 14px;
       font-size: 12px;
+      font-weight: 600;
       margin-right: 6px;
       margin-bottom: 6px;
     }
     .takedown-link {
-      color: #ff9e7d;
-      font-size: 13px;
+      color: var(--accent-primary);
+      font-weight: 600;
       text-decoration: underline;
       cursor: pointer;
+    }
+    /* Modal */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal-box {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: 32px;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: var(--shadow-lg);
+    }
+    .modal-box input, .modal-box textarea {
+      width: 100%;
+      padding: 10px 14px;
+      margin: 8px 0;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    .modal-box input:focus, .modal-box textarea:focus {
+      border-color: var(--accent-primary);
+      outline: none;
     }
   </style>
 
@@ -65,6 +94,9 @@
   <script type="application/ld+json" id="json-ld-schema"></script>
 </head>
 <body>
+
+<!-- Skip Link -->
+<a href="#main-content" class="skip-link">Skip to main content</a>
 
 <!-- Header -->
 <header class="site-header">
@@ -74,17 +106,44 @@
       <span>Verse<span> Nest</span></span>
     </a>
     <nav class="nav" aria-label="Main navigation">
-      <a href="../index.html#browse">English</a>
-      <a href="../sinhala.html" style="color:#efbacf;font-weight:700">සිංහල ගීත</a>
-      <a href="../index.html#guides">Guides</a>
+      <a href="../index.html#browse-originals">English Originals</a>
+      <a href="../sinhala.html" style="color:var(--accent-primary);font-weight:700">සිංහල ගීත (Library)</a>
+      <a href="../index.html#browse-classics">Classics</a>
+      <a href="../index.html#guides">Writing Guides</a>
       <a href="../about.html">About</a>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" id="theme-btn" aria-label="Toggle dark and light theme">
+        <span aria-hidden="true">🌓</span>
+        <span id="theme-btn-label">Theme</span>
+      </button>
     </nav>
+
+    <!-- Mobile Navigation Toggle -->
+    <button class="mobile-menu-btn" onclick="toggleMobileNav()" aria-label="Toggle navigation drawer" aria-expanded="false" id="mobile-toggle-btn">
+      ☰
+    </button>
+  </div>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-drawer" id="mobile-drawer" role="navigation" aria-label="Mobile navigation">
+    <a href="../index.html" onclick="toggleMobileNav()">🏠 Home</a>
+    <a href="../sinhala.html" style="color:var(--accent-primary);font-weight:700" onclick="toggleMobileNav()">🎵 Sinhala Song Library</a>
+    <a href="../index.html#browse-classics" onclick="toggleMobileNav()">★ Classic Masterpieces</a>
+    <a href="../index.html#browse-decades" onclick="toggleMobileNav()">📅 Eras &amp; Decades</a>
+    <a href="../index.html#browse-originals" onclick="toggleMobileNav()">✍️ English Originals</a>
+    <a href="../index.html#guides" onclick="toggleMobileNav()">📖 Songwriting Guides</a>
+    <a href="../about.html" onclick="toggleMobileNav()">ℹ️ About VerseNest</a>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px">
+      <span style="font-size:14px;color:var(--text-secondary)">Theme Mode:</span>
+      <button class="theme-toggle-btn" onclick="toggleTheme()" aria-label="Toggle theme in mobile menu">
+        <span>🌓</span> Switch Mode
+      </button>
+    </div>
   </div>
 </header>
 
 <main id="main-content">
   <!-- Loading state -->
-  <div class="loading" id="song-loader" style="text-align:center;padding:100px 20px">
+  <div class="loading" id="song-loader" style="text-align:center;padding:100px 20px;font-size:16px;color:var(--text-secondary)">
     ගීත විස්තර පූරණය වෙමින්... Loading song catalogue details...
   </div>
 
@@ -107,10 +166,10 @@
           <span id="crumb-title">Song</span>
         </div>
         <div class="article-head">
-          <span class="eyebrow" id="song-eyebrow">Sinhala</span>
+          <span class="eyebrow" id="song-eyebrow">Sinhala Masterpiece</span>
           <h1 id="song-title-main">ගීතයේ නම</h1>
           <p id="song-meta-desc">Artist &amp; Credits</p>
-          <div id="song-pills" style="margin-top:12px"></div>
+          <div id="song-pills" style="margin-top:14px"></div>
         </div>
       </div>
     </section>
@@ -118,15 +177,15 @@
     <section class="shell article-grid">
       <article class="article">
         <div class="article-actions">
-          <button type="button" class="action" id="copy-link">Copy link</button>
-          <a class="action" id="youtube-action-btn" target="_blank" href="#">Official Music Link ↗</a>
-          <a class="action" href="#meaning">Song Context ↓</a>
+          <button type="button" class="action" id="copy-link">📋 Copy Link</button>
+          <a class="action" id="youtube-action-btn" target="_blank" rel="noopener noreferrer" href="#">▶ Official Music Link ↗</a>
+          <a class="action" href="#meaning">📖 Song Context ↓</a>
         </div>
 
         <!-- Rights Management Notice -->
         <div class="rights-banner" id="rights-banner-box">
-          <strong id="rights-status-title">Copyright &amp; Lyrics Status</strong>
-          <p id="rights-status-desc" style="margin:4px 0 0;font-size:13px;color:#d5cee0"></p>
+          <strong id="rights-status-title" style="color:var(--text-primary)">Copyright &amp; Lyrics Status</strong>
+          <p id="rights-status-desc" style="margin:6px 0 0;font-size:13px;color:var(--text-secondary)"></p>
         </div>
 
         <!-- Authorized Lyrics Sheet OR Educational Notice -->
@@ -138,8 +197,8 @@
 
         <div class="lyrics-unavailable-box" id="lyrics-unavailable-card" style="display:none">
           <h3 style="margin-top:0">සම්පූර්ණ පද මාලාව ඇතුළත් කර නොමැත</h3>
-          <p class="muted">Full lyrics are unavailable pending publisher licensing rights. In compliance with copyright laws and Google AdSense policies, VerseNest only publishes authorized or public-domain lyrics.</p>
-          <a id="listen-fallback-btn" class="btn btn-primary" target="_blank" href="#" style="margin-top:14px;display:inline-block">Listen on YouTube / Streaming ↗</a>
+          <p class="muted" style="max-width:600px;margin:10px auto 18px">Full lyrics are unavailable pending publisher licensing rights. In compliance with copyright laws and Google AdSense policies, VerseNest only publishes authorized or public-domain lyrics.</p>
+          <a id="listen-fallback-btn" class="btn btn-primary" target="_blank" rel="noopener noreferrer" href="#" style="display:inline-flex">▶ Listen on YouTube / Streaming ↗</a>
         </div>
 
         <!-- Song Meaning / Context Card -->
@@ -171,15 +230,19 @@
 </main>
 
 <!-- Copyright Claim Modal -->
-<div id="claim-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);backdrop-filter:blur(6px);align-items:center;justify-content:center;z-index:999">
-  <div style="background:#171c2e;border:1px solid rgba(255,255,255,0.2);border-radius:14px;padding:30px;max-width:480px;width:90%">
-    <h3 style="margin-top:0">Copyright Notice &amp; Takedown</h3>
-    <p style="font-size:13px;color:#aaa">If you are the copyright holder and wish to restrict lyrics publication, please submit this notice:</p>
-    <input type="text" id="cl-name" placeholder="Your Name" style="width:100%;padding:8px 12px;margin:8px 0;background:#0d101b;border:1px solid #444;border-radius:6px;color:#fff">
-    <input type="email" id="cl-email" placeholder="Your Email" style="width:100%;padding:8px 12px;margin:8px 0;background:#0d101b;border:1px solid #444;border-radius:6px;color:#fff">
-    <input type="text" id="cl-rel" placeholder="Relationship (e.g. Composer, Lyricist, Label)" style="width:100%;padding:8px 12px;margin:8px 0;background:#0d101b;border:1px solid #444;border-radius:6px;color:#fff">
-    <textarea id="cl-details" rows="3" placeholder="Details of your request..." style="width:100%;padding:8px 12px;margin:8px 0;background:#0d101b;border:1px solid #444;border-radius:6px;color:#fff"></textarea>
-    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:14px">
+<div class="modal-backdrop" id="claim-modal" role="dialog" aria-labelledby="claim-modal-title" aria-modal="true">
+  <div class="modal-box">
+    <h3 id="claim-modal-title" style="margin-top:0;font-size:20px">Copyright Notice &amp; Takedown</h3>
+    <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">If you are the copyright holder and wish to restrict lyrics publication, please submit this notice:</p>
+    <label class="visually-hidden" for="cl-name">Your Name</label>
+    <input type="text" id="cl-name" placeholder="Your Name" required>
+    <label class="visually-hidden" for="cl-email">Your Email</label>
+    <input type="email" id="cl-email" placeholder="Your Email" required>
+    <label class="visually-hidden" for="cl-rel">Relationship</label>
+    <input type="text" id="cl-rel" placeholder="Relationship (e.g. Composer, Lyricist, Label)" required>
+    <label class="visually-hidden" for="cl-details">Details</label>
+    <textarea id="cl-details" rows="3" placeholder="Details of your request..." required></textarea>
+    <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:16px">
       <button class="btn btn-secondary" onclick="closeClaimModal()">Cancel</button>
       <button class="btn btn-primary" onclick="submitTakedown()">Submit Notice</button>
     </div>
@@ -192,7 +255,7 @@
     <div class="footer-grid">
       <div>
         <a class="brand" href="../index.html">
-          <span class="brand-mark">♫</span>
+          <span class="brand-mark" aria-hidden="true">♫</span>
           <span>Verse<span> Nest</span></span>
         </a>
         <p>A modern, educational discovery platform celebrating Sri Lankan music, poetry, and songwriting heritage.</p>
@@ -211,9 +274,53 @@
 <script>
 let currentSongId = null;
 
+// Theme functions
+function initTheme() {
+  const saved = localStorage.getItem('versenest_theme');
+  if (saved === 'light') {
+    document.body.classList.add('theme-light');
+    document.documentElement.setAttribute('data-theme', 'light');
+    updateThemeButton(true);
+  } else {
+    document.body.classList.remove('theme-light');
+    document.documentElement.setAttribute('data-theme', 'dark');
+    updateThemeButton(false);
+  }
+}
+
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('theme-light');
+  document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+  localStorage.setItem('versenest_theme', isLight ? 'light' : 'dark');
+  updateThemeButton(isLight);
+}
+
+function updateThemeButton(isLight) {
+  const lbl = document.getElementById('theme-btn-label');
+  if (lbl) lbl.textContent = isLight ? 'Dark' : 'Light';
+}
+
+function toggleMobileNav() {
+  const drawer = document.getElementById('mobile-drawer');
+  const btn = document.getElementById('mobile-toggle-btn');
+  const isOpen = drawer.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  btn.textContent = isOpen ? '✕' : '☰';
+}
+
+// Initial Run
 (function() {
+  initTheme();
   const params = new URLSearchParams(window.location.search);
-  const songId = params.get('song') || params.get('id');
+
+  // Client-side legacy ?id= redirection to canonical ?song= format
+  if (params.has('id') && !params.has('song')) {
+    const legacyId = params.get('id');
+    window.location.replace(`sinhala-song.html?song=${encodeURIComponent(legacyId)}`);
+    return;
+  }
+
+  const songId = params.get('song');
 
   if (!songId) {
     document.getElementById('song-loader').style.display = 'none';
@@ -221,6 +328,15 @@ let currentSongId = null;
     return;
   }
   currentSongId = songId;
+  const songUrl = `${window.location.origin}/lyrics/sinhala-song.html?song=${encodeURIComponent(songId)}`;
+  const canonicalEl = document.getElementById('canonical-url');
+  if (canonicalEl) {
+    canonicalEl.href = songUrl;
+  }
+  const ogUrlEl = document.getElementById('og-url');
+  if (ogUrlEl) {
+    ogUrlEl.content = songUrl;
+  }
 
   fetch(`/api/songs/${encodeURIComponent(songId)}`)
     .then(res => {
@@ -245,8 +361,8 @@ let currentSongId = null;
       pillsBox.innerHTML = `
         <span class="meta-tag-pill">ශෛලිය: ${song.genre}</span>
         <span class="meta-tag-pill">දශකය: ${song.era_decade || 'Unknown'}</span>
-        ${song.is_classic ? '<span class="meta-tag-pill" style="color:#ffb1bf">★ Classic Masterpiece</span>' : ''}
-        ${song.is_recent ? '<span class="meta-tag-pill" style="color:#ff9e7d">🔥 Recent Release</span>' : ''}
+        ${song.is_classic ? '<span class="meta-tag-pill" style="color:var(--accent-primary);border-color:var(--accent-primary)">★ Classic Masterpiece</span>' : ''}
+        ${song.is_recent ? '<span class="meta-tag-pill" style="color:var(--accent-warm);border-color:var(--accent-warm)">🔥 Recent Release</span>' : ''}
       `;
 
       // Rights Management Enforcement
@@ -304,10 +420,17 @@ let currentSongId = null;
         genreLinks.innerHTML += `<a href="sinhala-song.html?song=${s.id}">♫ ${s.title_si} – ${s.artist} →</a>`;
       });
 
+      // Update dynamic OpenGraph meta tags
+      const ogTitleEl = document.getElementById('og-title');
+      if (ogTitleEl) ogTitleEl.content = `${fullTitle} – VerseNest`;
+      const ogDescEl = document.getElementById('og-desc');
+      if (ogDescEl) ogDescEl.content = `${song.title_si} by ${song.artist} — Sinhala song details and musical metadata on VerseNest.`;
+
       // Inject Schema.org Structured Data for SEO
       const schema = {
         "@context": "https://schema.org",
         "@type": "MusicRecording",
+        "url": songUrl,
         "name": song.title_si,
         "alternateName": song.title_en,
         "byArtist": {
@@ -340,7 +463,7 @@ let currentSongId = null;
     } catch(e) {
       document.getElementById('copy-link').textContent = 'Copy this page URL';
     }
-    setTimeout(() => { document.getElementById('copy-link').textContent = 'Copy link'; }, 2000);
+    setTimeout(() => { document.getElementById('copy-link').textContent = '📋 Copy Link'; }, 2000);
   });
 })();
 
@@ -357,19 +480,23 @@ async function submitTakedown() {
   const d = document.getElementById('cl-details').value.trim();
   if (!n || !e || !d) { alert('Please fill in name, email, and details.'); return; }
 
-  await fetch('/api/copyright/report', {
-    method: 'POST',
-    headers: {'Content-Type': 'application/json'},
-    body: JSON.stringify({
-      song_id: parseInt(currentSongId),
-      claimant_name: n,
-      claimant_email: e,
-      relationship: r,
-      claim_details: d
-    })
-  });
-  alert('Thank you. Your notice has been registered with our editorial administration team.');
-  closeClaimModal();
+  try {
+    await fetch('/api/copyright/report', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        song_id: parseInt(currentSongId),
+        claimant_name: n,
+        claimant_email: e,
+        relationship: r,
+        claim_details: d
+      })
+    });
+    alert('Thank you. Your notice has been registered with our editorial administration team.');
+    closeClaimModal();
+  } catch(err) {
+    alert('Notice could not be sent. Please check your internet connection.');
+  }
 }
 </script>
 </body>

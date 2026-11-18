@@ -114,6 +114,7 @@ def search_songs(
     category: Optional[str] = None,
     artist: Optional[str] = None,
     lyrics_status: Optional[str] = None,
+    language: Optional[str] = None,
     include_quarantined: bool = False,
     sort_by: str = "relevance",  # "relevance", "popular", "newest", "year", "title"
     page: int = 1,
@@ -167,6 +168,10 @@ def search_songs(
         conditions.append("lyrics_status = ?")
         params.append(lyrics_status)
 
+    if language and language != "All":
+        conditions.append("language = ?")
+        params.append(language)
+
     where_clause = " WHERE " + " AND ".join(conditions) if conditions else ""
 
     # Count matching records
@@ -189,7 +194,7 @@ def search_songs(
     offset = (page - 1) * page_size
     fetch_sql = f"""
         SELECT id, song_uuid, title_si, title_en, artist, lyricist, composer,
-               album_or_movie, release_year, era_decade, genre, song_type,
+               album_or_movie, release_year, era_decade, genre, song_type, language,
                youtube_url, lyrics_status, publication_status, is_classic, is_recent, view_count,
                categories, description
         FROM songs
@@ -217,6 +222,7 @@ def search_songs(
             "era_decade": r["era_decade"],
             "genre": r["genre"],
             "song_type": r["song_type"],
+            "language": r["language"],
             "youtube_url": r["youtube_url"],
             "lyrics_status": r["lyrics_status"],
             "publication_status": r["publication_status"],
@@ -239,7 +245,7 @@ def search_songs(
         "songs": results
     }
 
-def get_search_suggestions(query: str, limit: int = 8) -> List[Dict[str, str]]:
+def get_search_suggestions(query: str, limit: int = 8, language: Optional[str] = None) -> List[Dict[str, str]]:
     """Returns fast autocomplete suggestions for published songs."""
     if not query or len(query.strip()) < 2:
         return []
@@ -256,13 +262,23 @@ def get_search_suggestions(query: str, limit: int = 8) -> List[Dict[str, str]]:
 
     for term in terms:
         like_term = f"%{term}%"
-        cursor.execute("""
-            SELECT id, title_si, title_en, artist, genre
-            FROM songs
-            WHERE (normalized_title_si LIKE ? OR normalized_title_en LIKE ? OR normalized_artist LIKE ?)
-              AND publication_status = 'published'
-            LIMIT ?;
-        """, (like_term, like_term, like_term, limit))
+        if language and language != "All":
+            cursor.execute("""
+                SELECT id, title_si, title_en, artist, genre
+                FROM songs
+                WHERE (normalized_title_si LIKE ? OR normalized_title_en LIKE ? OR normalized_artist LIKE ?)
+                  AND publication_status = 'published'
+                  AND language = ?
+                LIMIT ?;
+            """, (like_term, like_term, like_term, language, limit))
+        else:
+            cursor.execute("""
+                SELECT id, title_si, title_en, artist, genre
+                FROM songs
+                WHERE (normalized_title_si LIKE ? OR normalized_title_en LIKE ? OR normalized_artist LIKE ?)
+                  AND publication_status = 'published'
+                LIMIT ?;
+            """, (like_term, like_term, like_term, limit))
 
         for row in cursor.fetchall():
             key = (row["title_si"], row["artist"])
