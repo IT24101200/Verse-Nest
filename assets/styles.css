@@ -186,6 +186,12 @@ button {
   letter-spacing: -0.5px;
   font-size: 20px;
   color: var(--text-primary);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.brand span {
+  white-space: nowrap;
 }
 
 .brand-mark {
@@ -259,6 +265,9 @@ button {
   font-size: 18px;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+  min-height: 40px;
+  min-width: 40px;
 }
 
 /* Theme Toggle Button */
@@ -1223,11 +1232,62 @@ button {
   border: 0;
 }
 
+/* Featured 6-item Grid Balance on Homepage */
+#featured-sinhala-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 22px;
+}
+
+@media (min-width: 1600px) {
+  #featured-sinhala-grid {
+    grid-template-columns: repeat(6, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 950px) {
+  #featured-sinhala-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+}
+
+@media (max-width: 620px) {
+  #featured-sinhala-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
 /* ==========================================================================
    Responsive Breakpoints
    Maintains exact media queries required by automated tests:
    @media(max-width:950px) and @media(max-width:620px)
    ========================================================================== */
+
+@media(min-width:1121px) and (max-width:1300px) {
+  .nav {
+    gap: clamp(10px, 1.2vw, 16px);
+  }
+  .nav a {
+    padding: 6px 6px;
+    font-size: 13.5px;
+  }
+  .nav .nav-cta {
+    padding: 6px 14px;
+    font-size: 13px;
+  }
+}
+
+@media(max-width:1120px) {
+  .nav {
+    display: none;
+  }
+  .mobile-menu-btn {
+    display: inline-flex;
+  }
+}
 
 @media(max-width:950px) {
   .nav {

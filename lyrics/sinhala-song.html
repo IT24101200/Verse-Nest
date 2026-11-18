@@ -401,7 +401,12 @@ function toggleMobileNav() {
 
       // Meaning / Commentary
       document.getElementById('meaning-heading').textContent = `"${song.title_si}" ගීතය පිළිබඳ විග්‍රහය`;
-      document.getElementById('meaning-body').textContent = song.editorial_commentary || song.description || 'මෙම ගීතය ශ්‍රී ලාංකේය සංගීත ක්ෂේත්‍රයේ අගනා නිර්මාණයකි.';
+      let commentary = song.editorial_commentary || song.description || 'මෙම ගීතය ශ්‍රී ලාංකේය සංගීත ක්ෂේත්‍රයේ අගනා නිර්මාණයකි.';
+      // Ensure editorial decade matches verified era_decade dynamically
+      if (song.era_decade && typeof commentary === 'string') {
+        commentary = commentary.replace(/\(\d{4}s\)/g, `(${song.era_decade})`);
+      }
+      document.getElementById('meaning-body').textContent = commentary;
 
       // Same Artist Recommendations
       const artistLinks = document.getElementById('same-artist-links');
