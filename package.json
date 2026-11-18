@@ -1,0 +1,19 @@
+{
+  "name": "versenest-website",
+  "version": "1.0.0",
+  "description": "VerseNest Originals — Sinhala Song & Lyrics Discovery Platform",
+  "main": "backend/server.py",
+  "scripts": {
+    "start": "python backend/server.py",
+    "dev": "python backend/server.py",
+    "test": "python -m unittest discover -s tests -p \"test_*.py\""
+  },
+  "keywords": [
+    "sinhala",
+    "lyrics",
+    "music",
+    "fastapi"
+  ],
+  "author": "VerseNest Team",
+  "license": "ISC"
+}

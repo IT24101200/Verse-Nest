@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: versenest-staging
+    env: python
+    region: oregon
+    plan: starter # Starter plan required for Persistent Disk ($7/mo + $0.25/GB disk)
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.server:app --host 0.0.0.0 --port $PORT --workers 1
+    healthCheckPath: /api/health
+    disk:
+      name: versenest-data
+      mountPath: /app/data
+      sizeGB: 1
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: ENV
+        value: staging
+      - key: BASE_URL
+        sync: false # Set to your deployed Render URL (e.g., https://versenest-staging.onrender.com)
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        generateValue: true # Automatically generates a secure 32-character random password in Render

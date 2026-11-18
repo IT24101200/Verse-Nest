@@ -48,10 +48,36 @@ ENVIRONMENT=production
 ensure_env_file()
 load_env()
 
-SECRET_KEY = os.environ.get("VERSENEST_SECRET_KEY", "")
+SECRET_KEY = os.environ.get("SECRET_KEY") or os.environ.get("VERSENEST_SECRET_KEY", "")
 if not SECRET_KEY:
     SECRET_KEY = secrets.token_hex(32)
+    os.environ["SECRET_KEY"] = SECRET_KEY
     os.environ["VERSENEST_SECRET_KEY"] = SECRET_KEY
+
+ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME") or os.environ.get("ADMIN_USER", "admin")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD") or os.environ.get("ADMIN_PASS", "")
+
+def bootstrap_admin_user():
+    """
+    Ensures administrator credentials provided via environment variables
+    are safely hashed and synchronized to the SQLite admin_users table.
+    """
+    if ADMIN_PASSWORD:
+        allowed, _ = is_password_allowed(ADMIN_PASSWORD)
+        if allowed:
+            try:
+                conn = get_db_connection()
+                cursor = conn.cursor()
+                pwd_hash = hash_password(ADMIN_PASSWORD, iterations=PBKDF2_ITERATIONS)
+                cursor.execute("""
+                    INSERT INTO admin_users (username, password_hash, role)
+                    VALUES (?, ?, 'admin')
+                    ON CONFLICT(username) DO UPDATE SET password_hash = excluded.password_hash;
+                """, (ADMIN_USERNAME, pwd_hash))
+                conn.commit()
+                conn.close()
+            except Exception as e:
+                print(f"[SECURITY] Warning during admin bootstrap: {e}")
 
 # Security parameters
 PBKDF2_ITERATIONS = 600000

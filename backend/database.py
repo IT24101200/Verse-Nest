@@ -10,10 +10,41 @@ import uuid
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
-DB_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "versenest.db")
+DB_PATH = os.environ.get("DB_PATH", os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "versenest.db"))
+
+def ensure_database_ready(target_path: Optional[str] = None):
+    """
+    Safely initializes SQLite database for container volumes and fresh deployments.
+    If the target database does not exist in the mounted data directory, copies
+    the seed database from data_seed/versenest.db.
+    NEVER overwrites an existing database!
+    """
+    target = target_path or DB_PATH
+    os.makedirs(os.path.dirname(target), exist_ok=True)
+    if not os.path.exists(target) or os.path.getsize(target) == 0:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        seed_candidates = [
+            os.path.join(base_dir, "data_seed", "versenest.db"),
+            os.path.join(base_dir, "data", "versenest.db.seed"),
+            os.path.join(base_dir, "data", "versenest.db.bak_pre_staging_prep"),
+        ]
+        seeded = False
+        for seed_path in seed_candidates:
+            if os.path.exists(seed_path) and os.path.getsize(seed_path) > 0:
+                import shutil
+                shutil.copyfile(seed_path, target)
+                print(f"[STARTUP] Initialized fresh volume database from seed: {seed_path} -> {target}")
+                seeded = True
+                break
+        if not seeded:
+            print(f"[STARTUP] No seed found, creating fresh schema at {target}")
+    else:
+        # Existing database found - preserve safely
+        pass
 
 def get_db_connection() -> sqlite3.Connection:
     """Creates a thread-safe connection to the SQLite database with WAL mode."""
+    ensure_database_ready()
     os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
     conn = sqlite3.connect(DB_PATH, timeout=30.0, check_same_thread=False)
     conn.row_factory = sqlite3.Row
@@ -48,6 +79,7 @@ def init_db():
         era_decade TEXT DEFAULT '',
         genre TEXT DEFAULT 'Pop',
         song_type TEXT DEFAULT 'Original',
+        language TEXT DEFAULT 'si',
         youtube_url TEXT DEFAULT '',
         audio_url TEXT DEFAULT '',
         source_url TEXT DEFAULT '',
@@ -79,6 +111,16 @@ def init_db():
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_songs_mbid ON songs(musicbrainz_id);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_songs_pub_status ON songs(publication_status);")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_songs_lyrics_status ON songs(lyrics_status);")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_songs_language ON songs(language);")
+
+    # Ensure language column exists for existing databases
+    cursor.execute("PRAGMA table_info(songs);")
+    existing_cols = [r["name"] for r in cursor.fetchall()]
+    if "language" not in existing_cols:
+        cursor.execute("ALTER TABLE songs ADD COLUMN language TEXT DEFAULT 'si';")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_songs_language ON songs(language);")
+        cursor.execute("UPDATE songs SET language = 'en' WHERE song_type = 'Original Creative Sample' OR artist = 'VerseNest Originals';")
+        cursor.execute("UPDATE songs SET language = 'si' WHERE language IS NULL OR (song_type != 'Original Creative Sample' AND artist != 'VerseNest Originals');")
 
     # 2. Duplicates Review Table
     cursor.execute("""

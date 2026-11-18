@@ -16,7 +16,7 @@ sys.path.insert(0, backend_dir)
 from database import get_db_connection, init_db, DB_PATH
 from deduplication import evaluate_song_duplicate, normalize_sinhala_text, normalize_english_text
 from search_engine import search_songs, expand_transliterated_terms
-from server import app, verify_admin_token, generate_admin_token
+from server import app, verify_admin_token, generate_admin_token, BASE_URL
 from fastapi.testclient import TestClient
 
 client = TestClient(app)
@@ -25,7 +25,12 @@ class TestVerseNestPlatform(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
+        os.environ["TESTING"] = "true"
         init_db()
+        conn = get_db_connection()
+        conn.execute("DELETE FROM login_attempts WHERE ip = 'testclient';")
+        conn.commit()
+        conn.close()
 
     def test_01_import_existing_song_prevent_duplicate(self):
         """TEST 1: Import an existing song. Expected: no duplicate created."""
@@ -245,7 +250,7 @@ class TestVerseNestPlatform(unittest.TestCase):
         """TEST 16: Robots.txt & Sitemap validation. Expected: sitemap directive, admin disallow, clean URLs."""
         res_robots = client.get("/robots.txt")
         self.assertEqual(res_robots.status_code, 200)
-        self.assertIn("Sitemap: https://versenest.org/sitemap.xml", res_robots.text)
+        self.assertIn(f"Sitemap: {BASE_URL}/sitemap.xml", res_robots.text)
         self.assertIn("Disallow: /admin", res_robots.text)
 
         res_sitemap = client.get("/sitemap.xml")
@@ -253,6 +258,55 @@ class TestVerseNestPlatform(unittest.TestCase):
         self.assertIn("<urlset", res_sitemap.text)
         self.assertNotIn("song=38", res_sitemap.text)  # Ensure no synthetic songs in sitemap
         print("✓ TEST 16 PASSED: robots.txt directives and sitemap canonical URLs verified.")
+
+    def test_17_health_check_endpoint(self):
+        """TEST 17: Production/staging health check verification."""
+        res = client.get("/api/health")
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertEqual(data["status"], "healthy")
+        self.assertTrue(data["database"]["connected"])
+        self.assertEqual(data["database"]["integrity"], "ok")
+        self.assertGreaterEqual(data["database"]["published_songs"], 85)
+        print("✓ TEST 17 PASSED: Health check endpoint confirms healthy DB and published catalogue.")
+
+    def test_18_canonical_redirect_and_unique_urls(self):
+        """TEST 18: Canonical URL consolidation and legacy ?id= redirect."""
+        # 1. Test redirect from ?id= to ?song=
+        res_redirect = client.get("/lyrics/sinhala-song.html?id=5202", follow_redirects=False)
+        self.assertEqual(res_redirect.status_code, 301)
+        self.assertEqual(res_redirect.headers.get("location"), "/lyrics/sinhala-song.html?song=5202")
+
+        # 2. Test unique canonical per song
+        res_song_5202 = client.get("/lyrics/sinhala-song.html?song=5202")
+        self.assertEqual(res_song_5202.status_code, 200)
+        expected_canonical_5202 = f'{BASE_URL}/lyrics/sinhala-song.html?song=5202'
+        self.assertIn(f'rel="canonical" id="canonical-url" href="{expected_canonical_5202}"', res_song_5202.text)
+
+        res_song_14 = client.get("/lyrics/sinhala-song.html?song=14")
+        self.assertEqual(res_song_14.status_code, 200)
+        expected_canonical_14 = f'{BASE_URL}/lyrics/sinhala-song.html?song=14'
+        self.assertIn(f'rel="canonical" id="canonical-url" href="{expected_canonical_14}"', res_song_14.text)
+
+        # Confirm they are distinct and not using a shared template canonical
+        self.assertNotEqual(expected_canonical_5202, expected_canonical_14)
+        print("✓ TEST 18 PASSED: Legacy ?id= permanently redirects to ?song= and canonical URLs are unique.")
+
+    def test_19_staging_security_headers_and_robots(self):
+        """TEST 19: Staging crawler protection headers and noindex directives."""
+        # 1. Test X-Robots-Tag header in staging mode
+        os.environ["ENV"] = "staging"
+        res_page = client.get("/")
+        self.assertEqual(res_page.headers.get("x-robots-tag"), "noindex, nofollow, noarchive")
+
+        # 2. Test robots.txt disallows all in staging when not in unit test mode
+        os.environ["TESTING"] = "false"
+        res_robots_staging = client.get("/robots.txt")
+        self.assertIn("User-agent: *\nDisallow: /", res_robots_staging.text)
+
+        # Restore testing flag
+        os.environ["TESTING"] = "true"
+        print("✓ TEST 19 PASSED: Staging environment blocks indexing via X-Robots-Tag and robots.txt.")
 
 
 

@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  versenest-staging:
+    build: .
+    container_name: versenest_staging_app
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - BASE_URL=http://localhost:8080
+      - ENV=staging
+      - SECRET_KEY=staging_super_secret_session_key_change_in_production
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=staging_admin_secure_pass_2026
+    volumes:
+      # Persistent named volume preserves SQLite database across redeployments and restarts
+      - versenest_db_data:/app/data
+
+volumes:
+  versenest_db_data:
+    driver: local

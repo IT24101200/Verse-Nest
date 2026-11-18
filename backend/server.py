@@ -13,9 +13,15 @@ import hashlib
 import logging
 from typing import Optional, List, Dict, Any
 from datetime import datetime, timedelta
+import sys
+
+# Ensure backend directory is in python search path
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+if CURRENT_DIR not in sys.path:
+    sys.path.insert(0, CURRENT_DIR)
 
 from fastapi import FastAPI, HTTPException, Depends, Query, Request, status
-from fastapi.responses import HTMLResponse, JSONResponse, Response, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse, Response, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -34,6 +40,7 @@ from security import (
     record_login_attempt,
     revoke_token,
     is_password_allowed,
+    bootstrap_admin_user,
     SECRET_KEY
 )
 
@@ -51,8 +58,9 @@ logging.basicConfig(
 )
 logger = logging.getLogger("versenest")
 
-# Initialize database schema
+# Initialize database schema and bootstrap administrator credentials
 init_db()
+bootstrap_admin_user()
 
 app = FastAPI(
     title="VerseNest Originals API",
@@ -60,12 +68,18 @@ app = FastAPI(
     version="2.1.0"
 )
 
-# Request logging middleware
+# Request logging and staging security middleware
 @app.middleware("http")
-async def log_requests(request: Request, call_next):
+async def security_and_logging_middleware(request: Request, call_next):
     start_time = time.time()
     response = await call_next(request)
     duration = time.time() - start_time
+
+    # Staging security: block search engine indexing on staging deployments
+    current_env = os.environ.get("ENV", os.environ.get("ENVIRONMENT", "staging")).lower()
+    if current_env == "staging":
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+
     if response.status_code >= 400:
         logger.warning(f"{request.method} {request.url.path} returned {response.status_code} in {duration:.3f}s")
     return response
@@ -119,6 +133,7 @@ class SongCreateUpdateRequest(BaseModel):
     era_decade: Optional[str] = ""
     genre: Optional[str] = "Pop"
     song_type: Optional[str] = "Original"
+    language: Optional[str] = "si"
     youtube_url: Optional[str] = ""
     audio_url: Optional[str] = ""
     lyrics: Optional[str] = None
@@ -150,6 +165,7 @@ def api_get_songs(
     category: Optional[str] = Query("All"),
     artist: Optional[str] = Query("All"),
     lyrics_status: Optional[str] = Query("All"),
+    language: Optional[str] = Query(None, description="Filter by language: 'si' for Sinhala, 'en' for English"),
     sort_by: Optional[str] = Query("relevance"),
     page: int = Query(1, ge=1),
     page_size: int = Query(24, ge=1, le=100)
@@ -162,6 +178,7 @@ def api_get_songs(
         category=category,
         artist=artist,
         lyrics_status=lyrics_status,
+        language=language,
         sort_by=sort_by,
         page=page,
         page_size=page_size
@@ -233,6 +250,7 @@ def api_get_song_details(song_id: int):
         "era_decade": song["era_decade"],
         "genre": song["genre"],
         "song_type": song["song_type"],
+        "language": song["language"] if "language" in song.keys() else "si",
         "youtube_url": song["youtube_url"],
         "audio_url": song["audio_url"],
         "source_url": song["source_url"],
@@ -259,9 +277,9 @@ def api_get_song_details(song_id: int):
     return result
 
 @app.get("/api/search/suggestions")
-def api_get_suggestions(q: str = Query(..., min_length=2)):
+def api_get_suggestions(q: str = Query(..., min_length=2), language: Optional[str] = Query(None)):
     """Returns fast autocomplete search suggestions."""
-    return get_search_suggestions(q, limit=8)
+    return get_search_suggestions(q, limit=8, language=language)
 
 @app.get("/api/stats")
 def api_get_platform_stats():
@@ -271,6 +289,12 @@ def api_get_platform_stats():
 
     cursor.execute("SELECT COUNT(*) FROM songs WHERE publication_status = 'published';")
     total_songs = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM songs WHERE publication_status = 'published' AND language = 'si';")
+    sinhala_songs = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM songs WHERE publication_status = 'published' AND language = 'en';")
+    english_originals = cursor.fetchone()[0]
 
     cursor.execute("SELECT COUNT(DISTINCT artist) FROM songs WHERE publication_status = 'published';")
     total_artists = cursor.fetchone()[0]
@@ -287,6 +311,8 @@ def api_get_platform_stats():
     conn.close()
     return {
         "total_songs": total_songs,
+        "sinhala_songs": sinhala_songs,
+        "english_originals": english_originals,
         "total_artists": total_artists,
         "total_classics": total_classics,
         "total_recent": total_recent,
@@ -294,50 +320,78 @@ def api_get_platform_stats():
     }
 
 @app.get("/api/genres")
-def api_get_genres():
+def api_get_genres(language: Optional[str] = Query(None)):
     """Lists distinct genres with song counts."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT genre, COUNT(*) as count 
-        FROM songs 
-        WHERE publication_status = 'published' AND genre != ''
-        GROUP BY genre 
-        ORDER BY count DESC;
-    """)
+    if language and language != "All":
+        cursor.execute("""
+            SELECT genre, COUNT(*) as count 
+            FROM songs 
+            WHERE publication_status = 'published' AND genre != '' AND language = ?
+            GROUP BY genre 
+            ORDER BY count DESC;
+        """, (language,))
+    else:
+        cursor.execute("""
+            SELECT genre, COUNT(*) as count 
+            FROM songs 
+            WHERE publication_status = 'published' AND genre != ''
+            GROUP BY genre 
+            ORDER BY count DESC;
+        """)
     rows = cursor.fetchall()
     conn.close()
     return [{"genre": r["genre"], "count": r["count"]} for r in rows]
 
 @app.get("/api/decades")
-def api_get_decades():
+def api_get_decades(language: Optional[str] = Query(None)):
     """Lists all available decades with counts."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT era_decade, COUNT(*) as count 
-        FROM songs 
-        WHERE publication_status = 'published' AND era_decade != ''
-        GROUP BY era_decade 
-        ORDER BY era_decade ASC;
-    """)
+    if language and language != "All":
+        cursor.execute("""
+            SELECT era_decade, COUNT(*) as count 
+            FROM songs 
+            WHERE publication_status = 'published' AND era_decade != '' AND language = ?
+            GROUP BY era_decade 
+            ORDER BY era_decade ASC;
+        """, (language,))
+    else:
+        cursor.execute("""
+            SELECT era_decade, COUNT(*) as count 
+            FROM songs 
+            WHERE publication_status = 'published' AND era_decade != ''
+            GROUP BY era_decade 
+            ORDER BY era_decade ASC;
+        """)
     rows = cursor.fetchall()
     conn.close()
     return [{"decade": r["era_decade"], "count": r["count"]} for r in rows]
 
 @app.get("/api/artists/trending")
-def api_get_trending_artists(limit: int = 12):
+def api_get_trending_artists(limit: int = 12, language: Optional[str] = Query(None)):
     """Retrieves prominent artists with song counts."""
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT artist, COUNT(*) as song_count, SUM(view_count) as total_views
-        FROM songs
-        WHERE publication_status = 'published'
-        GROUP BY artist
-        ORDER BY total_views DESC, song_count DESC
-        LIMIT ?;
-    """, (limit,))
+    if language and language != "All":
+        cursor.execute("""
+            SELECT artist, COUNT(*) as song_count, SUM(view_count) as total_views
+            FROM songs
+            WHERE publication_status = 'published' AND language = ?
+            GROUP BY artist
+            ORDER BY total_views DESC, song_count DESC
+            LIMIT ?;
+        """, (language, limit))
+    else:
+        cursor.execute("""
+            SELECT artist, COUNT(*) as song_count, SUM(view_count) as total_views
+            FROM songs
+            WHERE publication_status = 'published'
+            GROUP BY artist
+            ORDER BY total_views DESC, song_count DESC
+            LIMIT ?;
+        """, (limit,))
     rows = cursor.fetchall()
     conn.close()
     return [{"artist": r["artist"], "song_count": r["song_count"], "views": r["total_views"]} for r in rows]
@@ -558,11 +612,11 @@ def api_admin_create_song(song: SongCreateUpdateRequest, admin: str = Depends(ge
     INSERT INTO songs (
         song_uuid, title_si, title_en, normalized_title_si, normalized_title_en,
         alternative_titles, artist, normalized_artist, singers, lyricist, composer,
-        album_or_movie, release_year, era_decade, genre, song_type, youtube_url,
+        album_or_movie, release_year, era_decade, genre, song_type, language, youtube_url,
         audio_url, source_url, isrc, musicbrainz_id, lyrics, lyrics_status,
         lyrics_license_notes, lyrics_evidence, description, editorial_commentary,
         categories, is_classic, is_recent, publication_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
     """, (
         str(uuid.uuid4()),
         song.title_si,
@@ -580,6 +634,7 @@ def api_admin_create_song(song: SongCreateUpdateRequest, admin: str = Depends(ge
         song.era_decade or "",
         song.genre or "Pop",
         song.song_type or "Original",
+        song.language or "si",
         song.youtube_url or "",
         song.audio_url or "",
         "",
@@ -622,6 +677,7 @@ def api_admin_update_song(song_id: int, song: SongCreateUpdateRequest, admin: st
         era_decade = ?,
         genre = ?,
         song_type = ?,
+        language = ?,
         youtube_url = ?,
         audio_url = ?,
         lyrics = ?,
@@ -649,6 +705,7 @@ def api_admin_update_song(song_id: int, song: SongCreateUpdateRequest, admin: st
         song.era_decade,
         song.genre,
         song.song_type,
+        song.language or "si",
         song.youtube_url,
         song.audio_url,
         song.lyrics,
@@ -721,12 +778,15 @@ def api_admin_resolve_duplicate(review_id: int, action: str = Query(..., pattern
     candidate = json.loads(review["candidate_json"])
 
     if action == "insert_distinct":
+        rel_year = candidate.get("release_year", 2020)
+        era = candidate.get("era_decade", f"{str(rel_year)[:3]}0s")
         cursor.execute("""
         INSERT INTO songs (
             song_uuid, title_si, title_en, normalized_title_si, normalized_title_en,
             alternative_titles, artist, normalized_artist, singers, lyricist, composer,
-            release_year, genre, lyrics_status, publication_status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'rights_unknown', 'published');
+            release_year, era_decade, genre, song_type, youtube_url, source_url, musicbrainz_id,
+            lyrics_status, publication_status, language, is_classic, is_recent, categories
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'rights_unknown', 'published', 'si', ?, ?, ?);
         """, (
             str(uuid.uuid4()),
             candidate["title_si"],
@@ -736,11 +796,19 @@ def api_admin_resolve_duplicate(review_id: int, action: str = Query(..., pattern
             json.dumps([]),
             candidate["artist"],
             normalize_english_text(candidate["artist"]),
-            json.dumps([candidate["artist"]]),
+            json.dumps(candidate.get("singers", [candidate["artist"]])),
             candidate.get("lyricist", ""),
             candidate.get("composer", ""),
-            candidate.get("release_year", 2020),
-            candidate.get("genre", "Pop")
+            rel_year,
+            era,
+            candidate.get("genre", "Pop"),
+            "Original",
+            candidate.get("youtube_url", ""),
+            candidate.get("source_url", ""),
+            candidate.get("musicbrainz_id", ""),
+            1 if rel_year <= 1989 else 0,
+            1 if rel_year >= 2020 else 0,
+            json.dumps(candidate.get("categories", [candidate.get("genre", "Pop")]))
         ))
         cursor.execute("UPDATE duplicates_review SET status = 'inserted_distinct', reviewed_by = ?, reviewed_at = CURRENT_TIMESTAMP WHERE id = ?;", (admin, review_id))
 
@@ -831,13 +899,59 @@ def api_admin_export_database(admin: str = Depends(get_current_admin)):
     conn.close()
     return {"exported_at": datetime.utcnow().isoformat(), "total": len(songs), "songs": songs}
 
+# ==================== HEALTH CHECK & MONITORING ====================
+
+@app.get("/api/health")
+def api_health():
+    """
+    Staging and production readiness health check endpoint.
+    Verifies SQLite database connectivity, published songs count, and data integrity.
+    """
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM songs WHERE publication_status = 'published';")
+        published_count = cursor.fetchone()[0]
+        cursor.execute("PRAGMA integrity_check;")
+        integrity = cursor.fetchone()[0]
+        conn.close()
+
+        healthy = (integrity == "ok" and published_count > 0)
+        return {
+            "status": "healthy" if healthy else "degraded",
+            "environment": os.environ.get("ENV", "staging"),
+            "base_url": BASE_URL,
+            "database": {
+                "connected": True,
+                "integrity": integrity,
+                "published_songs": published_count
+            },
+            "timestamp": datetime.utcnow().isoformat()
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=503,
+            content={
+                "status": "unhealthy",
+                "database": {"connected": False, "error": str(e)},
+                "timestamp": datetime.utcnow().isoformat()
+            }
+        )
+
 # ==================== SEO & STATIC SITEMAP ====================
 
-BASE_URL = os.environ.get("BASE_URL", "https://versenest.org").rstrip("/")
+BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080").rstrip("/")
 
 @app.get("/robots.txt", response_class=Response)
 def serve_robots():
-    """Serves dynamic robots.txt with sitemap directive and crawl protections."""
+    """Serves dynamic robots.txt. Disallows indexing on staging deployments."""
+    current_env = os.environ.get("ENV", os.environ.get("ENVIRONMENT", "staging")).lower()
+    is_testing = os.environ.get("TESTING") == "true"
+
+    if current_env == "staging" and not is_testing:
+        content = "User-agent: *\nDisallow: /\n"
+        return Response(content=content, media_type="text/plain")
+
     content = f"""User-agent: *
 Allow: /
 Disallow: /admin
@@ -876,6 +990,62 @@ def api_sitemap():
 
     xml_lines.append('</urlset>')
     return Response(content="\n".join(xml_lines), media_type="application/xml")
+
+# ==================== DYNAMIC CANONICAL SONG ROUTE ====================
+
+@app.get("/lyrics/sinhala-song.html", response_class=HTMLResponse)
+def serve_sinhala_song_page(song: Optional[int] = None, id: Optional[int] = None):
+    """
+    Serves the Sinhala song details page with:
+    1. HTTP 301 permanent redirect from legacy ?id= to canonical ?song=
+    2. Dynamic, unique server-rendered canonical link per song
+    3. Dynamic OpenGraph tags matching song metadata
+    4. Safe template fallback when browsing without query params
+    """
+    # 1. Permanent redirect for legacy ?id= parameter
+    if id is not None and song is None:
+        return RedirectResponse(url=f"/lyrics/sinhala-song.html?song={id}", status_code=301)
+
+    html_path = os.path.join(BASE_DIR, "lyrics", "sinhala-song.html")
+    with open(html_path, "r", encoding="utf-8") as f:
+        html_content = f.read()
+
+    # 2. Dynamic Canonical and OpenGraph per song
+    if song is not None:
+        song_canonical_url = f"{BASE_URL}/lyrics/sinhala-song.html?song={song}"
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT title_si, title_en, artist FROM songs WHERE id = ? AND publication_status = 'published';", (song,))
+        song_row = cursor.fetchone()
+        conn.close()
+
+        og_title = f"{song_row['title_si']} ({song_row['title_en']}) – VerseNest" if song_row else f"Song #{song} – VerseNest"
+        og_desc = f"{song_row['title_si']} by {song_row['artist']} — Sinhala song details and musical metadata on VerseNest." if song_row else "Discover Sinhala song lyrics and cultural background on VerseNest."
+
+        dynamic_tags = f"""<link rel="canonical" id="canonical-url" href="{song_canonical_url}">
+  <meta property="og:url" id="og-url" content="{song_canonical_url}">
+  <meta property="og:title" id="og-title" content="{og_title}">
+  <meta property="og:description" id="og-desc" content="{og_desc}">"""
+
+        html_content = html_content.replace(
+            '<link rel="canonical" id="canonical-url" href="">',
+            f'<link rel="canonical" id="canonical-url" href="{song_canonical_url}">'
+        )
+        html_content = html_content.replace(
+            '<meta property="og:url" id="og-url" content="">',
+            f'<meta property="og:url" id="og-url" content="{song_canonical_url}">'
+        )
+        if song_row:
+            html_content = html_content.replace(
+                '<meta property="og:title" id="og-title" content="Sinhala Song Lyrics | VerseNest">',
+                f'<meta property="og:title" id="og-title" content="{og_title}">'
+            )
+            html_content = html_content.replace(
+                '<meta property="og:description" id="og-desc" content="Read full song information and musical metadata on VerseNest.">',
+                f'<meta property="og:description" id="og-desc" content="{og_desc}">'
+            )
+
+    return HTMLResponse(content=html_content)
 
 # Mount Static Files (Serving index.html, sinhala.html, assets, lyrics, etc.)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
