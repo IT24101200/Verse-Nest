@@ -1092,6 +1092,15 @@ def serve_terms():
 def serve_admin():
     return FileResponse(os.path.join(BASE_DIR, "admin.html"))
 
+# Route Google Search Console verification files (e.g., /google<hash>.html)
+@app.get("/google{code}.html")
+def serve_google_verification(code: str):
+    file_name = f"google{code}.html"
+    file_path = os.path.join(BASE_DIR, file_name)
+    if os.path.exists(file_path):
+        return FileResponse(file_path, media_type="text/html")
+    raise HTTPException(status_code=404, detail="Google verification file not found.")
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 8080))
