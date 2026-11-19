@@ -75,9 +75,10 @@ async def security_and_logging_middleware(request: Request, call_next):
     response = await call_next(request)
     duration = time.time() - start_time
 
-    # Staging security: block search engine indexing on staging deployments
+    # Staging security: block search engine indexing on staging deployments (allow verification files)
     current_env = os.environ.get("ENV", os.environ.get("ENVIRONMENT", "staging")).lower()
-    if current_env == "staging":
+    path = request.url.path
+    if current_env == "staging" and not path.startswith("/google") and path != "/favicon.ico":
         response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
 
     if response.status_code >= 400:
@@ -940,7 +941,7 @@ def api_health():
 
 # ==================== SEO & STATIC SITEMAP ====================
 
-BASE_URL = os.environ.get("BASE_URL", "http://localhost:8080").rstrip("/")
+BASE_URL = os.environ.get("BASE_URL", os.environ.get("RENDER_EXTERNAL_URL", "https://verse-nest.onrender.com")).rstrip("/")
 
 @app.get("/robots.txt", response_class=Response)
 def serve_robots():
@@ -949,7 +950,10 @@ def serve_robots():
     is_testing = os.environ.get("TESTING") == "true"
 
     if current_env == "staging" and not is_testing:
-        content = "User-agent: *\nDisallow: /\n"
+        content = """User-agent: *
+Disallow: /
+Allow: /google*.html
+"""
         return Response(content=content, media_type="text/plain")
 
     content = f"""User-agent: *
