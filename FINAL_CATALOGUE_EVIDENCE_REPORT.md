@@ -7,7 +7,7 @@
 **Database State:** Reconciled, verified, and locked in `data/versenest.db`  
 **Test Suite Status:** 35 / 35 tests passing cleanly  
 
----
+----
 
 ## 1. Executive Summary & Root Cause Reconciliation
 
