@@ -941,7 +941,10 @@ def api_health():
 
 # ==================== SEO & STATIC SITEMAP ====================
 
-BASE_URL = os.environ.get("BASE_URL", os.environ.get("RENDER_EXTERNAL_URL", "https://verse-nest.onrender.com")).rstrip("/")
+raw_base = os.environ.get("BASE_URL")
+if not raw_base or "localhost" in raw_base or "127.0.0.1" in raw_base:
+    raw_base = os.environ.get("RENDER_EXTERNAL_URL", "https://verse-nest.onrender.com")
+BASE_URL = raw_base.rstrip("/")
 
 @app.get("/robots.txt", response_class=Response)
 def serve_robots():

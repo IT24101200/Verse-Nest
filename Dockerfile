@@ -23,7 +23,7 @@ COPY robots.txt ./
 
 # Default environment configuration
 ENV PORT=8080
-ENV BASE_URL=http://localhost:8080
+ENV BASE_URL=https://verse-nest.onrender.com
 ENV ENV=staging
 
 EXPOSE 8080
